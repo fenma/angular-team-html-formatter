@@ -4,6 +4,14 @@
   "description": "Line-preserving HTML formatter for Angular templates with project-based tag rules.",
   "version": "0.1.0",
   "publisher": "Fenma",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fenma/angular-team-html-formatter.git"
+  },
+  "homepage": "https://github.com/fenma/angular-team-html-formatter",
+  "bugs": {
+    "url": "https://github.com/fenma/angular-team-html-formatter/issues"
+  },
   "license": "MIT",
   "icon": "assets/icon.png",
   "galleryBanner": {
