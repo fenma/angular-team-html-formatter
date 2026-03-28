@@ -2,7 +2,7 @@
   "name": "angular-team-html-formatter",
   "displayName": "Angular Team HTML Formatter",
   "description": "Line-preserving HTML formatter for Angular templates with project-based tag rules.",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "publisher": "Fenma",
   "repository": {
     "type": "git",
@@ -43,17 +43,6 @@
       {
         "command": "angularTeamHtmlFormatter.showActiveConfig",
         "title": "Show Active HTML Formatter Config"
-      }
-    ],
-    "languages": [
-      {
-        "id": "angular-html",
-        "aliases": [
-          "Angular HTML"
-        ],
-        "extensions": [
-          ".component.html"
-        ]
       }
     ],
     "configuration": {
