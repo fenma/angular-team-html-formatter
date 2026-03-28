@@ -57,6 +57,7 @@ Create `html-formatter.config.jsonc` in your project root:
   },
   "knownTagDefaults": {
     "attributeOrder": [],
+    "attributeLayout": "preserve", // preserve | multiline
     "unknownAttributesPosition": "bottom", // top | bottom
     "sortUnknownAttributes": "preserve", // preserve | alphabetical
     "closingStyle": "explicit", // preserve | self-closing | explicit
@@ -75,6 +76,7 @@ Create `html-formatter.config.jsonc` in your project root:
         "optionValue",
         "formControlName"
       ],
+      "attributeLayout": "multiline",
       "unknownAttributesPosition": "bottom",
       "sortUnknownAttributes": "preserve",
       "closingStyle": "explicit",
@@ -122,6 +124,7 @@ If a tag does not define a rule, the value from `knownTagDefaults` is used.
 Supported fields:
 
 - `attributeOrder`
+- `attributeLayout`
 - `unknownAttributesPosition`
 - `sortUnknownAttributes`
 - `closingStyle`
@@ -133,6 +136,7 @@ Example:
 ```json
 {
   "knownTagDefaults": {
+    "attributeLayout": "preserve",
     "unknownAttributesPosition": "bottom",
     "sortUnknownAttributes": "preserve",
     "closingStyle": "explicit",
@@ -241,6 +245,27 @@ Example:
 ```json
 {
   "unknownAttributesPosition": "bottom"
+}
+```
+
+#### `attributeLayout`
+
+Controls whether known-tag attributes stay in their current layout or are forced onto separate lines.
+
+Supported values:
+
+- `"preserve"`: keep the current single-line or multiline layout
+- `"multiline"`: place each attribute on its own line under the tag name
+
+Default:
+
+- `"preserve"`
+
+Example:
+
+```json
+{
+  "attributeLayout": "multiline"
 }
 ```
 

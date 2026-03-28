@@ -14,7 +14,7 @@ function activate(context) {
 
   const documentSelector = [
     { language: "html", scheme: "file" },
-    { language: "angular-html", scheme: "file" }
+    { scheme: "file", pattern: "**/*.html" }
   ];
 
   const formattingProvider = vscode.languages.registerDocumentFormattingEditProvider(documentSelector, {

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.2.0
+
+- Improved config discovery so nested projects can resolve the nearest `html-formatter.config.jsonc` between the active document and the workspace root
+- Fixed JSONC parsing for inline `//` comments inside formatter config files
+- Added `attributeLayout` support to `knownTagDefaults` and per-tag rules with `preserve` and `multiline` modes
+- Registered formatting for `*.html` files through the file-pattern selector
+- Expanded automated test coverage for config lookup and JSONC parsing
+- Added a publishing guide for packaging and releasing the extension
+
 ## 0.1.0
 
 - VS Code formatter for HTML and Angular templates

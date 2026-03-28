@@ -16,6 +16,7 @@ const DEFAULT_CONFIG = {
   },
   knownTagDefaults: {
     attributeOrder: [],
+    attributeLayout: "preserve",
     unknownAttributesPosition: "bottom",
     sortUnknownAttributes: "preserve",
     closingStyle: "preserve",

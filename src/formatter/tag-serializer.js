@@ -39,7 +39,8 @@ function resolveClosingStyle(text, tokens, tokenIndex, rule) {
  * @returns {string}
  */
 function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw) {
-  const prefersMultiline = /\n/.test(originalRaw) || rule.closingBracketPosition === "new-line";
+  const prefersMultiline =
+    rule.attributeLayout === "multiline" || /\n/.test(originalRaw) || rule.closingBracketPosition === "new-line";
   const attributeTexts = attributes.map((attribute) => attribute.raw);
 
   if (!attributeTexts.length) {
@@ -54,7 +55,7 @@ function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw)
     return `<${tagName} ${attributeTexts.join(" ")}${suffix}`;
   }
 
-  const lines = buildMultilineTagLines(tagName, attributes, originalRaw);
+  const lines = buildMultilineTagLines(tagName, attributes, originalRaw, rule);
 
   if (closingStyle === "explicit") {
     if (rule.closingBracketPosition === "same-line") {
@@ -107,9 +108,14 @@ function resolveExplicitClosingTagPosition(rule) {
  * @param {string} tagName
  * @param {import("../parser/html-tokenizer").AttributeToken[]} attributes
  * @param {string} originalRaw
+ * @param {object} rule
  * @returns {string[]}
  */
-function buildMultilineTagLines(tagName, attributes, originalRaw) {
+function buildMultilineTagLines(tagName, attributes, originalRaw, rule) {
+  if (rule.attributeLayout === "multiline") {
+    return [`<${tagName}`, ...attributes.map((attribute) => attribute.raw)];
+  }
+
   const groups = getOriginalAttributeLineGroups(attributes, originalRaw);
   const lines = [];
   let cursor = 0;

@@ -12,6 +12,18 @@ const PREFERRED_CONFIG_FILE = "html-formatter.config.jsonc";
 
 /**
  * @param {vscode.TextDocument | undefined} document
+ * @returns {string | null}
+ */
+function getDocumentDirectory(document) {
+  if (!document || !document.uri || document.uri.scheme !== "file") {
+    return null;
+  }
+
+  return path.dirname(document.uri.fsPath);
+}
+
+/**
+ * @param {vscode.TextDocument | undefined} document
  * @param {{warn(message: string): void, debug(message: string): void}} logger
  * @returns {{config: object, filePath: string | null, diagnostics: string[]}}
  */
@@ -29,7 +41,7 @@ function readWorkspaceConfig(document, logger) {
     };
   }
 
-  const configFilePath = findConfigFile(workspaceFolder.uri.fsPath);
+  const configFilePath = findConfigFile(workspaceFolder.uri.fsPath, getDocumentDirectory(document));
 
   if (!configFilePath) {
     diagnostics.push(
@@ -69,18 +81,50 @@ function readWorkspaceConfig(document, logger) {
 }
 
 /**
+ * Search from the current document folder upward so nested packages can keep
+ * their own formatter config without changing the VS Code workspace root.
+ *
  * @param {string} workspaceRoot
+ * @param {string | null} [startDirectory]
  * @returns {string | null}
  */
-function findConfigFile(workspaceRoot) {
-  for (const fileName of DEFAULT_CONFIG.configFileNames) {
-    const candidate = path.join(workspaceRoot, fileName);
-    if (fs.existsSync(candidate)) {
-      return candidate;
-    }
+function findConfigFile(workspaceRoot, startDirectory = null) {
+  const normalizedWorkspaceRoot = path.resolve(workspaceRoot);
+  let currentDirectory = startDirectory ? path.resolve(startDirectory) : normalizedWorkspaceRoot;
+
+  if (!isSameOrChildPath(normalizedWorkspaceRoot, currentDirectory)) {
+    currentDirectory = normalizedWorkspaceRoot;
   }
 
-  return null;
+  while (true) {
+    for (const fileName of DEFAULT_CONFIG.configFileNames) {
+      const candidate = path.join(currentDirectory, fileName);
+      if (fs.existsSync(candidate)) {
+        return candidate;
+      }
+    }
+
+    if (currentDirectory === normalizedWorkspaceRoot) {
+      return null;
+    }
+
+    const parentDirectory = path.dirname(currentDirectory);
+    if (parentDirectory === currentDirectory || !isSameOrChildPath(normalizedWorkspaceRoot, parentDirectory)) {
+      return null;
+    }
+
+    currentDirectory = parentDirectory;
+  }
+}
+
+/**
+ * @param {string} parentPath
+ * @param {string} targetPath
+ * @returns {boolean}
+ */
+function isSameOrChildPath(parentPath, targetPath) {
+  const relativePath = path.relative(parentPath, targetPath);
+  return relativePath === "" || (!relativePath.startsWith("..") && !path.isAbsolute(relativePath));
 }
 
 /**
@@ -88,11 +132,78 @@ function findConfigFile(workspaceRoot) {
  * @returns {any}
  */
 function parseJsonc(text) {
-  const withoutComments = text
-    .replace(/\/\*[\s\S]*?\*\//g, "")
-    .replace(/^\s*\/\/.*$/gm, "");
+  const withoutComments = stripJsonComments(text);
   const withoutTrailingCommas = withoutComments.replace(/,\s*([}\]])/g, "$1");
   return JSON.parse(withoutTrailingCommas);
+}
+
+/**
+ * Removes JSONC comments while preserving comment-like text inside strings.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function stripJsonComments(text) {
+  let output = "";
+  let index = 0;
+  let inString = false;
+  let stringQuote = null;
+
+  while (index < text.length) {
+    const current = text[index];
+    const next = text[index + 1];
+
+    if (inString) {
+      output += current;
+
+      if (current === "\\") {
+        if (index + 1 < text.length) {
+          output += text[index + 1];
+          index += 2;
+          continue;
+        }
+      } else if (current === stringQuote) {
+        inString = false;
+        stringQuote = null;
+      }
+
+      index += 1;
+      continue;
+    }
+
+    if (current === "\"" || current === "'") {
+      inString = true;
+      stringQuote = current;
+      output += current;
+      index += 1;
+      continue;
+    }
+
+    if (current === "/" && next === "/") {
+      index += 2;
+      while (index < text.length && text[index] !== "\n") {
+        index += 1;
+      }
+      continue;
+    }
+
+    if (current === "/" && next === "*") {
+      index += 2;
+      while (index < text.length) {
+        if (text[index] === "*" && text[index + 1] === "/") {
+          index += 2;
+          break;
+        }
+        index += 1;
+      }
+      continue;
+    }
+
+    output += current;
+    index += 1;
+  }
+
+  return output;
 }
 
 /**
@@ -171,6 +282,10 @@ function normalizeTagRule(rule, tagName, diagnostics, baseRule) {
       .filter(Boolean);
   }
 
+  if (rule.attributeLayout === "preserve" || rule.attributeLayout === "multiline") {
+    normalized.attributeLayout = rule.attributeLayout;
+  }
+
   if (rule.unknownAttributesPosition === "top" || rule.unknownAttributesPosition === "bottom") {
     normalized.unknownAttributesPosition = rule.unknownAttributesPosition;
   }
@@ -237,6 +352,8 @@ function clone(value) {
 module.exports = {
   PREFERRED_CONFIG_FILE,
   findConfigFile,
+  getDocumentDirectory,
+  isSameOrChildPath,
   normalizeConfig,
   parseJsonc,
   readWorkspaceConfig

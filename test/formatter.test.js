@@ -1,10 +1,13 @@
 "use strict";
 
+const fs = require("fs");
+const os = require("os");
+const path = require("path");
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { formatText, getIndentLevelAtEnd } = require("../src/formatter");
 const { DEFAULT_CONFIG } = require("../src/config/default-config");
-const { normalizeConfig } = require("../src/config/config-reader");
+const { findConfigFile, normalizeConfig, parseJsonc } = require("../src/config/config-reader");
 
 function createLogger() {
   return {
@@ -15,6 +18,14 @@ function createLogger() {
 
 function createConfig(partial) {
   return normalizeConfig(partial, []);
+}
+
+function createTempWorkspace(t) {
+  const workspaceRoot = fs.mkdtempSync(path.join(os.tmpdir(), "html-formatter-test-"));
+  t.after(() => {
+    fs.rmSync(workspaceRoot, { recursive: true, force: true });
+  });
+  return workspaceRoot;
 }
 
 test("unknown tag gets indentation only", () => {
@@ -138,6 +149,59 @@ test("closingBracketPosition new-line puts bracket on its own line", () => {
   assert.equal(output, "<p-select\n  inputId=\"order\"\n  class=\"w-full\"\n/>");
 });
 
+test("attributeLayout preserve keeps single-line known tags on one line", () => {
+  const input = "<p-select class=\"w-full\" inputId=\"order\" [options]=\"items\" />";
+  const config = createConfig({
+    tags: {
+      "p-select": {
+        attributeOrder: ["inputId", "class", "options"],
+        attributeLayout: "preserve",
+        closingStyle: "self-closing"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<p-select inputId=\"order\" class=\"w-full\" [options]=\"items\" />");
+});
+
+test("knownTagDefaults attributeLayout multiline puts known tag attributes on separate lines", () => {
+  const input = "<p-select class=\"w-full\" inputId=\"order\" [options]=\"items\" />";
+  const config = createConfig({
+    knownTagDefaults: {
+      attributeLayout: "multiline",
+      closingStyle: "self-closing"
+    },
+    tags: {
+      "p-select": {
+        attributeOrder: ["inputId", "class", "options"]
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<p-select\n  inputId=\"order\"\n  class=\"w-full\"\n  [options]=\"items\" />");
+});
+
+test("tag attributeLayout preserve can override multiline known tag defaults", () => {
+  const input = "<p-select class=\"w-full\" inputId=\"order\" [options]=\"items\" />";
+  const config = createConfig({
+    knownTagDefaults: {
+      attributeLayout: "multiline",
+      closingStyle: "self-closing"
+    },
+    tags: {
+      "p-select": {
+        attributeOrder: ["inputId", "class", "options"],
+        attributeLayout: "preserve"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<p-select inputId=\"order\" class=\"w-full\" [options]=\"items\" />");
+});
+
 test("angular bindings remain intact", () => {
   const input =
     "<p-select (onChange)=\"save($event)\" [(ngModel)]=\"value\" [options]=\"items\" *ngIf=\"ready\" #picker />";
@@ -174,6 +238,49 @@ test("invalid config does not crash formatting", () => {
   const config = normalizeConfig("invalid", []);
   const output = formatText(input, config, createLogger());
   assert.equal(output, "<div>\n  <span>Hi</span>\n</div>");
+});
+
+test("parseJsonc supports inline comments after properties", () => {
+  const parsed = parseJsonc(`{
+    "indent": {
+      "size": 4,
+      "useTabs": false
+    },
+    "knownTagDefaults": {
+      "unknownAttributesPosition": "bottom", // top | bottom
+      "sortUnknownAttributes": "preserve", // preserve | alphabetical
+      "closingStyle": "explicit" // preserve | self-closing | explicit
+    }
+  }`);
+
+  const config = normalizeConfig(parsed, []);
+  assert.equal(config.indent.size, 4);
+  assert.equal(config.knownTagDefaults.closingStyle, "explicit");
+});
+
+test("findConfigFile prefers the nearest config between document folder and workspace root", (t) => {
+  const workspaceRoot = createTempWorkspace(t);
+  const appRoot = path.join(workspaceRoot, "apps", "admin");
+  const srcRoot = path.join(appRoot, "src");
+  fs.mkdirSync(srcRoot, { recursive: true });
+
+  const workspaceConfigPath = path.join(workspaceRoot, "html-formatter.config.jsonc");
+  const nestedConfigPath = path.join(appRoot, "html-formatter.config.jsonc");
+  fs.writeFileSync(workspaceConfigPath, "{\n  \"indent\": { \"size\": 2 }\n}\n");
+  fs.writeFileSync(nestedConfigPath, "{\n  \"indent\": { \"size\": 4 }\n}\n");
+
+  assert.equal(findConfigFile(workspaceRoot, srcRoot), nestedConfigPath);
+});
+
+test("findConfigFile falls back to workspace root when no nested config exists", (t) => {
+  const workspaceRoot = createTempWorkspace(t);
+  const srcRoot = path.join(workspaceRoot, "apps", "admin", "src");
+  fs.mkdirSync(srcRoot, { recursive: true });
+
+  const workspaceConfigPath = path.join(workspaceRoot, "html-formatter.config.jsonc");
+  fs.writeFileSync(workspaceConfigPath, "{\n  \"indent\": { \"size\": 2 }\n}\n");
+
+  assert.equal(findConfigFile(workspaceRoot, srcRoot), workspaceConfigPath);
 });
 
 test("angular if control flow indents nested html", () => {
