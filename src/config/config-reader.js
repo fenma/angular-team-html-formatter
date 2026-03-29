@@ -282,11 +282,15 @@ function normalizeTagRule(rule, tagName, diagnostics, baseRule) {
       .filter(Boolean);
   }
 
-  if (rule.attributeLayout === "preserve" || rule.attributeLayout === "multiline") {
+  if (["preserve", "multi-line", "single-line"].includes(rule.attributeLayout)) {
     normalized.attributeLayout = rule.attributeLayout;
   }
 
-  if (rule.unknownAttributesPosition === "top" || rule.unknownAttributesPosition === "bottom") {
+  if (Number.isInteger(rule.maxAttributeLineWidth) && rule.maxAttributeLineWidth > 0) {
+    normalized.maxAttributeLineWidth = rule.maxAttributeLineWidth;
+  }
+
+  if (rule.unknownAttributesPosition === "first" || rule.unknownAttributesPosition === "last") {
     normalized.unknownAttributesPosition = rule.unknownAttributesPosition;
   }
 

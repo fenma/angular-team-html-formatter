@@ -38,7 +38,7 @@ function sortAttributes(attributes, rule) {
     unmatched.sort((left, right) => left.baseName.localeCompare(right.baseName) || left.order - right.order);
   }
 
-  if (rule.unknownAttributesPosition === "top") {
+  if (rule.unknownAttributesPosition === "first") {
     return unmatched.concat(matched);
   }
 

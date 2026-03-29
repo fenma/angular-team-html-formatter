@@ -38,7 +38,7 @@ If a tag is not configured in the project config:
 If a tag is configured:
 
 - attributes are matched and reordered deterministically
-- unknown attributes stay at the top or bottom depending on config
+- unknown attributes can be placed first or last depending on config
 - Angular binding syntax is preserved exactly
 - empty elements can be normalized to self-closing or explicit form
 
@@ -57,12 +57,13 @@ Create `html-formatter.config.jsonc` in your project root:
   },
   "knownTagDefaults": {
     "attributeOrder": [],
-    "attributeLayout": "preserve", // preserve | multiline
-    "unknownAttributesPosition": "bottom", // top | bottom
-    "sortUnknownAttributes": "preserve", // preserve | alphabetical
-    "closingStyle": "explicit", // preserve | self-closing | explicit
-    "closingBracketPosition": "new-line", // preserve | same-line | new-line
-    "closingTagPosition": "same-line" // preserve | same-line | new-line
+    "unknownAttributesPosition": "last",   // first | last
+    "sortUnknownAttributes": "preserve",   // preserve | alphabetical
+    "attributeLayout": "preserve",         // preserve | multi-line | single-line
+    "maxAttributeLineWidth": 100,
+    "closingStyle": "explicit",            // preserve | self-closing | explicit
+    "closingBracketPosition": "new-line",  // preserve | same-line | new-line
+    "closingTagPosition": "same-line"      // preserve | same-line | new-line
   },
   "tags": {
     "p-select": {
@@ -76,8 +77,9 @@ Create `html-formatter.config.jsonc` in your project root:
         "optionValue",
         "formControlName"
       ],
-      "attributeLayout": "multiline",
-      "unknownAttributesPosition": "bottom",
+      "attributeLayout": "single-line",
+      "maxAttributeLineWidth": 100,
+      "unknownAttributesPosition": "last",
       "sortUnknownAttributes": "preserve",
       "closingStyle": "explicit",
       "closingBracketPosition": "new-line",
@@ -125,6 +127,7 @@ Supported fields:
 
 - `attributeOrder`
 - `attributeLayout`
+- `maxAttributeLineWidth`
 - `unknownAttributesPosition`
 - `sortUnknownAttributes`
 - `closingStyle`
@@ -137,7 +140,8 @@ Example:
 {
   "knownTagDefaults": {
     "attributeLayout": "preserve",
-    "unknownAttributesPosition": "bottom",
+    "maxAttributeLineWidth": 100,
+    "unknownAttributesPosition": "last",
     "sortUnknownAttributes": "preserve",
     "closingStyle": "explicit",
     "closingBracketPosition": "new-line",
@@ -233,18 +237,18 @@ Controls where attributes go that are not listed in `attributeOrder`.
 
 Supported values:
 
-- `"bottom"`: unknown attributes are placed after all configured attributes
-- `"top"`: unknown attributes are placed before all configured attributes
+- `"last"`: unknown attributes are placed after all configured attributes
+- `"first"`: unknown attributes are placed before all configured attributes
 
 Default:
 
-- `"bottom"`
+- `"last"`
 
 Example:
 
 ```json
 {
-  "unknownAttributesPosition": "bottom"
+  "unknownAttributesPosition": "last"
 }
 ```
 
@@ -255,7 +259,8 @@ Controls whether known-tag attributes stay in their current layout or are forced
 Supported values:
 
 - `"preserve"`: keep the current single-line or multiline layout
-- `"multiline"`: place each attribute on its own line under the tag name
+- `"multi-line"`: place each attribute on its own line under the tag name
+- `"single-line"`: place as many attributes on one line as possible, wrapping only when `maxAttributeLineWidth` is exceeded
 
 Default:
 
@@ -265,7 +270,30 @@ Example:
 
 ```json
 {
-  "attributeLayout": "multiline"
+  "attributeLayout": "single-line"
+}
+```
+
+#### `maxAttributeLineWidth`
+
+Controls the maximum total line width, measured from column 0, when `attributeLayout` is set to `"single-line"`.
+
+Before the formatter adds the next attribute to the current line, it calculates the resulting width. If that width would exceed this value, the next attribute starts a new line and the same width check is applied again on that line.
+
+Supported values:
+
+- positive integers, for example `100`
+
+Default:
+
+- `null` (no width-based wrapping)
+
+Example:
+
+```json
+{
+  "attributeLayout": "single-line",
+  "maxAttributeLineWidth": 100
 }
 ```
 

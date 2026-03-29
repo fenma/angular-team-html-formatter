@@ -4,9 +4,11 @@
 
 - Improved config discovery so nested projects can resolve the nearest `html-formatter.config.jsonc` between the active document and the workspace root
 - Fixed JSONC parsing for inline `//` comments inside formatter config files
-- Added `attributeLayout` support to `knownTagDefaults` and per-tag rules with `preserve` and `multiline` modes
+- Added `attributeLayout` support to `knownTagDefaults` and per-tag rules with `preserve`, `multi-line`, and `single-line` modes
+- Added `maxAttributeLineWidth` to wrap `single-line` attribute layouts once the configured total width would be exceeded
 - Registered formatting for `*.html` files through the file-pattern selector
 - Expanded automated test coverage for config lookup and JSONC parsing
+- Split the formatter test suite into focused files with shared test helpers
 - Added a publishing guide for packaging and releasing the extension
 
 ## 0.1.0
