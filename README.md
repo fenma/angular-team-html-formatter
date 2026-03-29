@@ -4,6 +4,15 @@ Line-preserving VS Code formatter for Angular HTML templates and standard HTML.
 
 This extension is designed for teams that want predictable indentation everywhere, while only applying stronger formatting rules to tags that are explicitly configured in the repository. It is especially useful for Angular component templates with custom elements such as PrimeNG components like `p-select`, but it remains safe for ordinary HTML because unknown tags get `indent-only` behavior by default.
 
+![attributeOrder demo](./assets/media/attributeOrder.gif)
+
+![closingStyle demo](./assets/media/closingStyle.gif)
+
+![attributeLayout multi-line demo](./assets/media/attributeLayout_multi-line.gif)
+
+![attributeLayout single-line demo](./assets/media/attributeLayout_single-line.gif)
+
+
 ## Architecture Summary
 
 The formatter has two main steps:
