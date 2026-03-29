@@ -46,6 +46,7 @@ function resolveClosingStyle(text, tokens, tokenIndex, rule) {
  */
 function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw) {
   const attributeTexts = attributes.map((attribute) => attribute.raw);
+  const closingBracketPosition = resolveClosingBracketPosition(rule, originalRaw);
 
   if (!attributeTexts.length) {
     if (closingStyle === "self-closing") {
@@ -56,15 +57,16 @@ function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw)
 
   if (rule.attributeLayout === "single-line") {
     const wrappedLines = buildWrappedAttributeLines(tagName, attributes, rule.maxAttributeLineWidth);
-    if (wrappedLines.length === 1 && rule.closingBracketPosition !== "new-line") {
+    if (wrappedLines.length === 1 && closingBracketPosition !== "new-line") {
       const suffix = closingStyle === "self-closing" ? " />" : ">";
       return `${wrappedLines[0]}${suffix}`;
     }
 
-    return finalizeMultilineStartTag(wrappedLines, closingStyle, rule);
+    return finalizeMultilineStartTag(wrappedLines, closingStyle, closingBracketPosition);
   }
 
-  const prefersMultiline = rule.attributeLayout === "multi-line" || /\n/.test(originalRaw) || rule.closingBracketPosition === "new-line";
+  const prefersMultiline =
+    rule.attributeLayout === "multi-line" || /\n/.test(originalRaw) || closingBracketPosition === "new-line";
 
   if (!prefersMultiline) {
     const suffix = closingStyle === "self-closing" ? " />" : ">";
@@ -72,23 +74,23 @@ function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw)
   }
 
   const lines = buildMultilineTagLines(tagName, attributes, originalRaw, rule);
-  return finalizeMultilineStartTag(lines, closingStyle, rule);
+  return finalizeMultilineStartTag(lines, closingStyle, closingBracketPosition);
 }
 
 /**
  * @param {string[]} lines
  * @param {"self-closing" | "explicit"} closingStyle
- * @param {object} rule
+ * @param {"same-line" | "new-line"} closingBracketPosition
  * @returns {string}
  */
-function finalizeMultilineStartTag(lines, closingStyle, rule) {
+function finalizeMultilineStartTag(lines, closingStyle, closingBracketPosition) {
   if (closingStyle === "explicit") {
-    if (rule.closingBracketPosition === "same-line") {
+    if (closingBracketPosition === "same-line") {
       lines[lines.length - 1] = `${lines[lines.length - 1]}>`;
     } else {
       lines.push(">");
     }
-  } else if (rule.closingBracketPosition === "new-line") {
+  } else if (closingBracketPosition === "new-line") {
     lines.push("/>");
   } else {
     lines[lines.length - 1] = `${lines[lines.length - 1]} />`;
@@ -98,24 +100,47 @@ function finalizeMultilineStartTag(lines, closingStyle, rule) {
 }
 
 /**
+ * @param {object} rule
+ * @param {string} originalRaw
+ * @returns {"same-line" | "new-line"}
+ */
+function resolveClosingBracketPosition(rule, originalRaw) {
+  if (rule.closingBracketPosition === "same-line" || rule.closingBracketPosition === "new-line") {
+    return rule.closingBracketPosition;
+  }
+
+  if (rule.closingBracketPosition === "preserve") {
+    return /\/?\s*\n\s*\/?>$/.test(originalRaw) || /\n\s*>$/.test(originalRaw) ? "new-line" : "same-line";
+  }
+
+  return "same-line";
+}
+
+/**
  * @param {string} serializedStartTag
  * @param {string} tagName
  * @param {object} rule
+ * @param {"same-line" | "new-line" | null} [originalClosingTagPosition]
  * @returns {string}
  */
-function appendExplicitClosingTag(serializedStartTag, tagName, rule) {
+function appendExplicitClosingTag(serializedStartTag, tagName, rule, originalClosingTagPosition = null) {
   const closingTag = `</${tagName}>`;
-  const closingTagPosition = resolveExplicitClosingTagPosition(rule);
+  const closingTagPosition = resolveExplicitClosingTagPosition(rule, originalClosingTagPosition);
   return closingTagPosition === "new-line" ? `${serializedStartTag}\n${closingTag}` : `${serializedStartTag}${closingTag}`;
 }
 
 /**
  * @param {object} rule
+ * @param {"same-line" | "new-line" | null} [originalClosingTagPosition]
  * @returns {"same-line" | "new-line"}
  */
-function resolveExplicitClosingTagPosition(rule) {
+function resolveExplicitClosingTagPosition(rule, originalClosingTagPosition = null) {
   if (rule.closingTagPosition === "same-line" || rule.closingTagPosition === "new-line") {
     return rule.closingTagPosition;
+  }
+
+  if (rule.closingTagPosition === "preserve" && originalClosingTagPosition) {
+    return originalClosingTagPosition;
   }
 
   return "same-line";

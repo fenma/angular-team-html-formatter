@@ -79,11 +79,12 @@ function buildTagReplacement(text, tokens, tokenIndex, rule, logger) {
     const trailingEndTokenIndex = findTrailingExplicitEndToken(text, tokens, tokenIndex);
     if (trailingEndTokenIndex !== null) {
       const endToken = tokens[trailingEndTokenIndex];
+      const originalClosingTagPosition = getOriginalClosingTagPosition(token, endToken);
       return {
         replacement: {
           start: token.start,
           end: endToken.end,
-          text: appendExplicitClosingTag(serializedStartTag, token.tagName, rule)
+          text: appendExplicitClosingTag(serializedStartTag, token.tagName, rule, originalClosingTagPosition)
         },
         consumedTokenIndexes: [tokenIndex, trailingEndTokenIndex]
       };
@@ -102,15 +103,16 @@ function buildTagReplacement(text, tokens, tokenIndex, rule, logger) {
   if (desiredClosingStyle === "explicit" && token.pairIndex !== null) {
     const endToken = tokens[token.pairIndex];
     const between = text.slice(token.end, endToken.start);
-    const explicitTagText = appendExplicitClosingTag(serializedStartTag, token.tagName, rule);
+    const originalClosingTagPosition = getOriginalClosingTagPosition(token, endToken);
+    const explicitTagText = appendExplicitClosingTag(serializedStartTag, token.tagName, rule, originalClosingTagPosition);
     const multilineExplicit = /\n/.test(serializedStartTag);
 
-    if (multilineExplicit || between.trim().length === 0) {
+    if (between.trim().length === 0) {
       return {
         replacement: {
           start: token.start,
           end: endToken.end,
-          text: explicitTagText
+          text: multilineExplicit ? explicitTagText : `${serializedStartTag}${between}</${token.tagName}>`
         },
         consumedTokenIndexes: [tokenIndex, token.pairIndex]
       };
@@ -121,10 +123,38 @@ function buildTagReplacement(text, tokens, tokenIndex, rule, logger) {
     replacement: {
       start: token.start,
       end: token.end,
-      text: serializedStartTag
+      text: shouldMoveContentAfterNewLineClosingBracket(serializedStartTag, token, tokens, text)
+        ? `${serializedStartTag}\n`
+        : serializedStartTag
     },
     consumedTokenIndexes: [tokenIndex]
   };
+}
+
+/**
+ * @param {string} serializedStartTag
+ * @param {import("../parser/html-tokenizer").TagToken} token
+ * @param {ReturnType<import("../parser/html-tokenizer").tokenizeHtml>} tokens
+ * @param {string} text
+ * @returns {boolean}
+ */
+function shouldMoveContentAfterNewLineClosingBracket(serializedStartTag, token, tokens, text) {
+  if (!serializedStartTag.endsWith("\n>") || token.pairIndex === null) {
+    return false;
+  }
+
+  const endToken = tokens[token.pairIndex];
+  const between = text.slice(token.end, endToken.start);
+  return between.trim().length > 0 && !between.startsWith("\n");
+}
+
+/**
+ * @param {import("../parser/html-tokenizer").TagToken} startToken
+ * @param {import("../parser/html-tokenizer").TagToken} endToken
+ * @returns {"same-line" | "new-line"}
+ */
+function getOriginalClosingTagPosition(startToken, endToken) {
+  return endToken.startLine > startToken.endLine ? "new-line" : "same-line";
 }
 
 /**

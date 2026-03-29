@@ -248,6 +248,45 @@ test("tag-specific closingTagPosition overrides global default", () => {
   assert.equal(output, "<p-select\n  class=\"w-full\"\n  [options]=\"name\"></p-select>");
 });
 
+test("knownTagDefaults closingTagPosition preserve keeps an existing new-line closing tag", () => {
+  const input = "<p-select class=\"w-full\">\n</p-select>";
+  const config = createConfig({
+    knownTagDefaults: {
+      attributeLayout: "multi-line",
+      closingStyle: "explicit",
+      closingBracketPosition: "same-line",
+      closingTagPosition: "preserve"
+    },
+    tags: {
+      "p-select": {
+        attributeOrder: ["class"]
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<p-select\n  class=\"w-full\">\n</p-select>");
+});
+
+test("knownTagDefaults closingBracketPosition preserve keeps an existing new-line closing bracket", () => {
+  const input = "<p-select\n  class=\"w-full\"\n/>";
+  const config = createConfig({
+    knownTagDefaults: {
+      attributeLayout: "multi-line",
+      closingStyle: "self-closing",
+      closingBracketPosition: "preserve"
+    },
+    tags: {
+      "p-select": {
+        attributeOrder: ["class"]
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<p-select\n  class=\"w-full\"\n/>");
+});
+
 test("existing explicit tags honor same-line bracket and new-line closing tag", () => {
   const input =
     "<p-select\n  class=\"w-full\"\n  [options]=\"transportModeData\"\n  [placeholder]=\"dropdownPlaceholder\"\n  [showClear]=\"true\"\n  optionLabel=\"mode\"\n  optionValue=\"id\"\n  formControlName=\"transportModeId\"\n  id=\"transportModeId\"\n></p-select>";
@@ -312,4 +351,130 @@ test("void tags ignore explicit closingStyle and keep self-closing output", () =
 
   const output = formatText(input, config, createLogger());
   assert.equal(output, "<input pInputText id=\"address\" type=\"text\" formControlName=\"address\" maxlength=\"35\"\n/>");
+});
+
+test("self-closing rules do not collapse known tags that contain text", () => {
+  const input = "<mytag>halo</mytag>";
+  const config = createConfig({
+    tags: {
+      mytag: {
+        attributeLayout: "single-line",
+        closingStyle: "self-closing"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<mytag>halo</mytag>");
+});
+
+test("self-closing rules do not collapse known tags that contain child elements", () => {
+  const input = "<mytag><div>test</div></mytag>";
+  const config = createConfig({
+    tags: {
+      mytag: {
+        attributeLayout: "single-line",
+        closingStyle: "self-closing"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<mytag><div>test</div></mytag>");
+});
+
+test("self-closing fallback keeps explicit text content and still honors new-line closing bracket", () => {
+  const input = "<mytag>halo</mytag>";
+  const config = createConfig({
+    tags: {
+      mytag: {
+        closingStyle: "self-closing",
+        closingBracketPosition: "new-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<mytag>halo</mytag>");
+});
+
+test("self-closing fallback keeps child elements and still honors new-line closing bracket", () => {
+  const input = "<mytag><div>test</div></mytag>";
+  const config = createConfig({
+    tags: {
+      mytag: {
+        closingStyle: "self-closing",
+        closingBracketPosition: "new-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<mytag><div>test</div></mytag>");
+});
+
+test("self-closing fallback keeps attributes and child elements while honoring new-line closing bracket", () => {
+  const input = "<mytag class=\"hero\" data-id=\"7\"><div>test</div></mytag>";
+  const config = createConfig({
+    tags: {
+      mytag: {
+        attributeOrder: ["class", "data-id"],
+        attributeLayout: "multi-line",
+        closingStyle: "self-closing",
+        closingBracketPosition: "new-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<mytag\n  class=\"hero\"\n  data-id=\"7\"\n>\n  <div>test</div></mytag>");
+});
+
+test("explicit formatting without attributes ignores new-line closing bracket", () => {
+  const input = "<mytag></mytag>";
+  const config = createConfig({
+    tags: {
+      mytag: {
+        closingStyle: "explicit",
+        closingBracketPosition: "new-line",
+        closingTagPosition: "same-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<mytag></mytag>");
+});
+
+test("self-closing formatting without attributes ignores new-line closing bracket", () => {
+  const input = "<mytag></mytag>";
+  const config = createConfig({
+    tags: {
+      mytag: {
+        closingStyle: "self-closing",
+        closingBracketPosition: "new-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<mytag />");
+});
+
+test("explicit formatting preserves existing text content", () => {
+  const input = "<p-select class=\"w-full\">halo</p-select>";
+  const config = createConfig({
+    tags: {
+      "p-select": {
+        attributeOrder: ["class"],
+        attributeLayout: "multi-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line",
+        closingTagPosition: "new-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<p-select\n  class=\"w-full\">halo</p-select>");
 });
