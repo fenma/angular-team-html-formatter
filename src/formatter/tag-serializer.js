@@ -84,7 +84,7 @@ function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw)
 function finalizeMultilineStartTag(lines, closingStyle, rule) {
   if (closingStyle === "explicit") {
     if (rule.closingBracketPosition === "same-line") {
-      lines[lines.length - 1] = `${lines[lines.length - 1]} >`;
+      lines[lines.length - 1] = `${lines[lines.length - 1]}>`;
     } else {
       lines.push(">");
     }
@@ -105,14 +105,8 @@ function finalizeMultilineStartTag(lines, closingStyle, rule) {
  */
 function appendExplicitClosingTag(serializedStartTag, tagName, rule) {
   const closingTag = `</${tagName}>`;
-  if (!/\n/.test(serializedStartTag)) {
-    return `${serializedStartTag}${closingTag}`;
-  }
-
   const closingTagPosition = resolveExplicitClosingTagPosition(rule);
-  return closingTagPosition === "new-line"
-    ? `${serializedStartTag}\n${closingTag}`
-    : `${serializedStartTag}${closingTag}`;
+  return closingTagPosition === "new-line" ? `${serializedStartTag}\n${closingTag}` : `${serializedStartTag}${closingTag}`;
 }
 
 /**

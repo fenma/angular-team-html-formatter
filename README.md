@@ -188,6 +188,7 @@ Behavior:
 - attributes not listed here are treated as unknown attributes
 - unknown attributes are placed according to `unknownAttributesPosition`
 - the formatter preserves the original attribute text and value
+- void tags such as `input`, `img` and `br` ignore closing-only options like `closingStyle` and `closingTagPosition`
 
 Important Angular behavior:
 

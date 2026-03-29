@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/fenma/angular-team-html-formatter/schemas/html-formatter.schema.json",
+  "title": "Angular Team HTML Formatter Config",
+  "type": "object",
+  "description": "Project-based formatter configuration for Angular Team HTML Formatter.",
+  "additionalProperties": false,
+  "properties": {
+    "indent": {
+      "$ref": "#/definitions/indent"
+    },
+    "indentSize": {
+      "type": "integer",
+      "minimum": 1,
+      "description": "Legacy shorthand for indent.size."
+    },
+    "useTabs": {
+      "type": "boolean",
+      "description": "Legacy shorthand for indent.useTabs."
+    },
+    "defaultBehavior": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "unknownTags": {
+          "type": "string",
+          "enum": ["indent-only"],
+          "description": "Fallback behavior for tags not listed in tags."
+        }
+      }
+    },
+    "knownTagDefaults": {
+      "$ref": "#/definitions/nonVoidTagRule"
+    },
+    "tags": {
+      "type": "object",
+      "description": "Per-tag formatting rules. Only tags listed here get custom formatting behavior.",
+      "default": {},
+      "properties": {
+        "area": { "$ref": "#/definitions/voidTagRule" },
+        "base": { "$ref": "#/definitions/voidTagRule" },
+        "br": { "$ref": "#/definitions/voidTagRule" },
+        "col": { "$ref": "#/definitions/voidTagRule" },
+        "embed": { "$ref": "#/definitions/voidTagRule" },
+        "hr": { "$ref": "#/definitions/voidTagRule" },
+        "img": { "$ref": "#/definitions/voidTagRule" },
+        "input": { "$ref": "#/definitions/voidTagRule" },
+        "link": { "$ref": "#/definitions/voidTagRule" },
+        "meta": { "$ref": "#/definitions/voidTagRule" },
+        "param": { "$ref": "#/definitions/voidTagRule" },
+        "source": { "$ref": "#/definitions/voidTagRule" },
+        "track": { "$ref": "#/definitions/voidTagRule" },
+        "wbr": { "$ref": "#/definitions/voidTagRule" }
+      },
+      "patternProperties": {
+        "^(?!(?:area|base|br|col|embed|hr|img|input|link|meta|param|source|track|wbr)$).+": {
+          "$ref": "#/definitions/nonVoidTagRule"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "definitions": {
+    "indent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "default": 2,
+          "description": "Number of spaces per indentation level."
+        },
+        "useTabs": {
+          "type": "boolean",
+          "default": false,
+          "description": "Use tabs instead of spaces."
+        }
+      }
+    },
+    "attributeOrderEntry": {
+      "oneOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "description": "Attribute name, for example optionLabel or class."
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Base attribute name to match."
+            },
+            "kinds": {
+              "type": "array",
+              "description": "Restrict matching to specific Angular or HTML attribute kinds.",
+              "items": {
+                "type": "string",
+                "enum": ["plain", "property", "event", "two-way", "structural", "template-ref"]
+              },
+              "uniqueItems": true
+            }
+          },
+          "required": ["name"]
+        }
+      ]
+    },
+    "nonVoidTagRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "attributeOrder": {
+          "type": "array",
+          "description": "Deterministic attribute order for this tag.",
+          "items": {
+            "$ref": "#/definitions/attributeOrderEntry"
+          }
+        },
+        "unknownAttributesPosition": {
+          "type": "string",
+          "enum": ["first", "last"],
+          "default": "last",
+          "description": "Where attributes not listed in attributeOrder should be placed."
+        },
+        "sortUnknownAttributes": {
+          "type": "string",
+          "enum": ["preserve", "alphabetical"],
+          "default": "preserve",
+          "description": "How unknown attributes are ordered relative to each other."
+        },
+        "maxAttributeLineWidth": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum width before single-line attribute layout wraps."
+        },
+        "attributeLayout": {
+          "type": "string",
+          "enum": ["preserve", "multi-line", "single-line"],
+          "default": "preserve",
+          "description": "Whether attributes stay as-is, become multiline, or try to stay on one line."
+        },
+        "closingBracketPosition": {
+          "type": "string",
+          "enum": ["preserve", "same-line", "new-line"],
+          "default": "preserve",
+          "description": "Where the closing > or /> should be placed."
+        },
+        "closingStyle": {
+          "type": "string",
+          "enum": ["preserve", "self-closing", "explicit"],
+          "default": "preserve",
+          "description": "How non-void tags should be closed."
+        },
+        "closingTagPosition": {
+          "type": "string",
+          "enum": ["preserve", "same-line", "new-line"],
+          "default": "preserve",
+          "description": "Where the explicit closing tag should be placed."
+        }
+      }
+    },
+    "voidTagRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Void tags do not support closingStyle or closingTagPosition.",
+      "properties": {
+        "attributeOrder": {
+          "type": "array",
+          "description": "Deterministic attribute order for this tag.",
+          "items": {
+            "$ref": "#/definitions/attributeOrderEntry"
+          }
+        },
+        "unknownAttributesPosition": {
+          "type": "string",
+          "enum": ["first", "last"],
+          "default": "last",
+          "description": "Where attributes not listed in attributeOrder should be placed."
+        },
+        "sortUnknownAttributes": {
+          "type": "string",
+          "enum": ["preserve", "alphabetical"],
+          "default": "preserve",
+          "description": "How unknown attributes are ordered relative to each other."
+        },
+        "maxAttributeLineWidth": {
+          "type": "integer",
+          "minimum": 1,
+          "description": "Maximum width before single-line attribute layout wraps."
+        },
+        "attributeLayout": {
+          "type": "string",
+          "enum": ["preserve", "multi-line", "single-line"],
+          "default": "preserve",
+          "description": "Whether attributes stay as-is, become multiline, or try to stay on one line."
+        },
+        "closingBracketPosition": {
+          "type": "string",
+          "enum": ["preserve", "same-line", "new-line"],
+          "default": "preserve",
+          "description": "Where the closing > or /> should be placed."
+        }
+      }
+    }
+  }
+}

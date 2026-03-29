@@ -1,7 +1,10 @@
 "use strict";
 
 const vscode = require("vscode");
+const path = require("path");
 const { readWorkspaceConfig } = require("./config/config-reader");
+const { collectConfigDiagnostics } = require("./config/config-diagnostics");
+const { DEFAULT_CONFIG } = require("./config/default-config");
 const { formatText, getIndentLevelAtEnd } = require("./formatter");
 const { createLogger } = require("./utils/logger");
 const { fullDocumentRange, fullLineRange } = require("./utils/text-edits");
@@ -11,6 +14,7 @@ const { fullDocumentRange, fullLineRange } = require("./utils/text-edits");
  */
 function activate(context) {
   const logger = createLogger(context);
+  const configDiagnostics = vscode.languages.createDiagnosticCollection("angularTeamHtmlFormatterConfig");
 
   const documentSelector = [
     { language: "html", scheme: "file" },
@@ -72,12 +76,44 @@ function activate(context) {
     }
   );
 
+  const refreshDocumentDiagnostics = (document) => {
+    if (!isFormatterConfigDocument(document)) {
+      return;
+    }
+
+    configDiagnostics.set(document.uri, buildConfigDiagnostics(document));
+  };
+
+  const clearDocumentDiagnostics = (document) => {
+    if (!isFormatterConfigDocument(document)) {
+      return;
+    }
+
+    configDiagnostics.delete(document.uri);
+  };
+
+  for (const document of vscode.workspace.textDocuments) {
+    refreshDocumentDiagnostics(document);
+  }
+
+  const openConfigListener = vscode.workspace.onDidOpenTextDocument(refreshDocumentDiagnostics);
+  const changeConfigListener = vscode.workspace.onDidChangeTextDocument((event) => {
+    refreshDocumentDiagnostics(event.document);
+  });
+  const saveConfigListener = vscode.workspace.onDidSaveTextDocument(refreshDocumentDiagnostics);
+  const closeConfigListener = vscode.workspace.onDidCloseTextDocument(clearDocumentDiagnostics);
+
   context.subscriptions.push(
+    configDiagnostics,
     formattingProvider,
     rangeFormattingProvider,
     formatCommand,
     validateConfigCommand,
-    showActiveConfigCommand
+    showActiveConfigCommand,
+    openConfigListener,
+    changeConfigListener,
+    saveConfigListener,
+    closeConfigListener
   );
 }
 
@@ -126,6 +162,35 @@ function buildRangeEdit(document, range, logger) {
   }
 
   return [vscode.TextEdit.replace(expandedRange, formatted)];
+}
+
+/**
+ * @param {vscode.TextDocument} document
+ * @returns {boolean}
+ */
+function isFormatterConfigDocument(document) {
+  return (
+    document &&
+    document.uri &&
+    document.uri.scheme === "file" &&
+    DEFAULT_CONFIG.configFileNames.includes(path.basename(document.uri.fsPath))
+  );
+}
+
+/**
+ * @param {vscode.TextDocument} document
+ * @returns {vscode.Diagnostic[]}
+ */
+function buildConfigDiagnostics(document) {
+  return collectConfigDiagnostics(document.getText()).map((diagnostic) => {
+    const start = document.positionAt(diagnostic.start);
+    const end = document.positionAt(Math.max(diagnostic.end, diagnostic.start + 1));
+    const range = new vscode.Range(start, end);
+    const severity =
+      diagnostic.severity === "error" ? vscode.DiagnosticSeverity.Error : vscode.DiagnosticSeverity.Warning;
+
+    return new vscode.Diagnostic(range, diagnostic.message, severity);
+  });
 }
 
 module.exports = {

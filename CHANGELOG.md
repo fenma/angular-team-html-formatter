@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.1
+## 0.3.0
 
 - Fixed void tags such as `input` so they always format as self-closing, even when `closingStyle` is set to `explicit`
 - Removed duplicate closing-tag output for void elements written with explicit end tags such as `<input></input>`

@@ -2,7 +2,7 @@
   "name": "angular-team-html-formatter",
   "displayName": "Angular Team HTML Formatter",
   "description": "Line-preserving HTML formatter for Angular templates with project-based tag rules.",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "publisher": "Fenma",
   "repository": {
     "type": "git",
@@ -54,7 +54,25 @@
           "description": "Enable formatter debug output in the extension output channel."
         }
       }
-    }
+    },
+    "jsonValidation": [
+      {
+        "fileMatch": "html-formatter.config.jsonc",
+        "url": "./schemas/html-formatter.schema.json"
+      },
+      {
+        "fileMatch": "html-formatter.config.json",
+        "url": "./schemas/html-formatter.schema.json"
+      },
+      {
+        "fileMatch": ".angular-html-format.json",
+        "url": "./schemas/html-formatter.schema.json"
+      },
+      {
+        "fileMatch": ".team-html-format.json",
+        "url": "./schemas/html-formatter.schema.json"
+      }
+    ]
   },
   "scripts": {
     "test": "node --test",

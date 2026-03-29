@@ -1,5 +1,6 @@
 "use strict";
 
+const { startsWithAngularBlock } = require("../angular/block-syntax");
 const { tokenizeHtml } = require("../parser/html-tokenizer");
 
 /**
@@ -139,9 +140,6 @@ function getAngularControlFlowLineInfo(line) {
   }
 
   const remaining = trimmed.slice(index);
-  const startsWithAngularBlock =
-    /^@(if|else(\s+if)?|for|switch|case|default|defer|placeholder|loading|error|empty)\b/.test(remaining);
-
   let openCount = 0;
   let closeCount = 0;
 

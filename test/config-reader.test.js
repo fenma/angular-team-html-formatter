@@ -66,3 +66,27 @@ test("findConfigFile falls back to workspace root when no nested config exists",
 
   assert.equal(findConfigFile(workspaceRoot, srcRoot), workspaceConfigPath);
 });
+
+test("normalizeConfig ignores closing settings that do not apply to void tags", () => {
+  const diagnostics = [];
+  const config = normalizeConfig(
+    {
+      tags: {
+        input: {
+          closingStyle: "explicit",
+          closingBracketPosition: "new-line",
+          closingTagPosition: "new-line"
+        }
+      }
+    },
+    diagnostics
+  );
+
+  assert.equal(config.tags.input.closingStyle, undefined);
+  assert.equal(config.tags.input.closingBracketPosition, "new-line");
+  assert.equal(config.tags.input.closingTagPosition, undefined);
+  assert.deepEqual(diagnostics, [
+    'Ignoring closingStyle on void tag "input". Void tags cannot use closingStyle.',
+    'Ignoring closingTagPosition on void tag "input". Void tags do not have end tags.'
+  ]);
+});
