@@ -1,5 +1,7 @@
 "use strict";
 
+const { isVoidTag } = require("../html/void-tags");
+
 /**
  * @param {string} text
  * @param {ReturnType<import("../parser/html-tokenizer").tokenizeHtml>} tokens
@@ -9,6 +11,10 @@
  */
 function resolveClosingStyle(text, tokens, tokenIndex, rule) {
   const token = tokens[tokenIndex];
+
+  if (isVoidTag(token.tagName)) {
+    return "self-closing";
+  }
 
   if (rule.closingStyle === "self-closing") {
     if (token.pairIndex !== null) {

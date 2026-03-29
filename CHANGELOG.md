@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1
+
+- Fixed void tags such as `input` so they always format as self-closing, even when `closingStyle` is set to `explicit`
+- Removed duplicate closing-tag output for void elements written with explicit end tags such as `<input></input>`
+- Centralized the shared void-tag list into a dedicated utility used by both the tokenizer and formatter
+
 ## 0.2.0
 
 - Improved config discovery so nested projects can resolve the nearest `html-formatter.config.jsonc` between the active document and the workspace root

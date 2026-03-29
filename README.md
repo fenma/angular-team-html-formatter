@@ -59,8 +59,8 @@ Create `html-formatter.config.jsonc` in your project root:
     "attributeOrder": [],
     "unknownAttributesPosition": "last",   // first | last
     "sortUnknownAttributes": "preserve",   // preserve | alphabetical
-    "attributeLayout": "preserve",         // preserve | multi-line | single-line
     "maxAttributeLineWidth": 100,
+    "attributeLayout": "preserve",         // preserve | multi-line | single-line
     "closingStyle": "explicit",            // preserve | self-closing | explicit
     "closingBracketPosition": "new-line",  // preserve | same-line | new-line
     "closingTagPosition": "same-line"      // preserve | same-line | new-line

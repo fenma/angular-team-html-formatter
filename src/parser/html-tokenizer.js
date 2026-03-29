@@ -1,25 +1,6 @@
 "use strict";
 
-/**
- * HTML void elements never create child nesting, even without `/>`.
- * This keeps indentation correct for tags like `<input>` and `<br>`.
- */
-const VOID_TAGS = new Set([
-  "area",
-  "base",
-  "br",
-  "col",
-  "embed",
-  "hr",
-  "img",
-  "input",
-  "link",
-  "meta",
-  "param",
-  "source",
-  "track",
-  "wbr"
-]);
+const { isVoidTag } = require("../html/void-tags");
 
 /**
  * @typedef {object} AttributeToken
@@ -111,7 +92,7 @@ function tokenizeHtml(text) {
     const raw = text.slice(index, tokenEnd + 1);
     const match = /^<\s*([^\s/>]+)/.exec(raw);
     const tagName = match ? match[1].toLowerCase() : null;
-    const selfClosing = /\/\s*>$/.test(raw) || (tagName ? VOID_TAGS.has(tagName) : false);
+    const selfClosing = /\/\s*>$/.test(raw) || isVoidTag(tagName);
     const attributes = parseAttributes(raw);
     tokens.push(createToken("start", raw, tagName, index, tokenEnd + 1, lineStarts, selfClosing, attributes));
     index = tokenEnd + 1;
@@ -403,6 +384,7 @@ function offsetToLine(lineStarts, offset) {
 
 module.exports = {
   classifyAttribute,
+  isVoidTag,
   parseAttributes,
   tokenizeHtml
 };

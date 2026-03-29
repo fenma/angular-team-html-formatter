@@ -201,3 +201,39 @@ test("self-closing same-line keeps slash bracket on the last attribute line", ()
   const output = formatText(input, config, createLogger());
   assert.equal(output, "<p-select\n  class=\"w-full\" [options]=\"name\" />");
 });
+
+test("explicit formatting does not duplicate the closing tag for void elements written with an end tag", () => {
+  const input = "<input pInputText id=\"address\" type=\"text\" formControlName=\"address\" maxlength=\"35\"></input>";
+  const config = createConfig({
+    tags: {
+      input: {
+        attributeOrder: ["pInputText", "id", "type", "formControlName", "maxlength"],
+        attributeLayout: "single-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line",
+        closingTagPosition: "same-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<input pInputText id=\"address\" type=\"text\" formControlName=\"address\" maxlength=\"35\" />");
+});
+
+test("void tags ignore explicit closingStyle and keep self-closing output", () => {
+  const input = "<input pInputText id=\"address\" type=\"text\" formControlName=\"address\" maxlength=\"35\">";
+  const config = createConfig({
+    tags: {
+      input: {
+        attributeOrder: ["pInputText", "id", "type", "formControlName", "maxlength"],
+        attributeLayout: "single-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "new-line",
+        closingTagPosition: "same-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<input pInputText id=\"address\" type=\"text\" formControlName=\"address\" maxlength=\"35\"\n/>");
+});
