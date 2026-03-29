@@ -151,7 +151,7 @@
         },
         "closingBracketPosition": {
           "type": "string",
-          "enum": ["preserve", "same-line", "new-line"],
+          "enum": ["preserve", "same-line", "next-line"],
           "default": "preserve",
           "description": "Where the closing > or /> should be placed."
         },
@@ -163,7 +163,7 @@
         },
         "closingTagPosition": {
           "type": "string",
-          "enum": ["preserve", "same-line", "new-line"],
+          "enum": ["preserve", "same-line", "next-line"],
           "default": "preserve",
           "description": "Where the explicit closing tag should be placed."
         }
@@ -213,7 +213,7 @@
         },
         "closingBracketPosition": {
           "type": "string",
-          "enum": ["preserve", "same-line", "new-line"],
+          "enum": ["preserve", "same-line", "next-line"],
           "default": "preserve",
           "description": "Where the closing > or /> should be placed."
         }

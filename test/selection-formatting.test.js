@@ -23,7 +23,7 @@ test("next sibling after multiline self-closing tag keeps parent indent", () => 
           "id"
         ],
         closingStyle: "self-closing",
-        closingBracketPosition: "new-line"
+        closingBracketPosition: "next-line"
       }
     }
   });
@@ -52,7 +52,7 @@ test("next sibling after multiline explicit tag keeps parent indent", () => {
           "id"
         ],
         closingStyle: "explicit",
-        closingBracketPosition: "new-line"
+        closingBracketPosition: "next-line"
       }
     }
   });
@@ -82,7 +82,7 @@ test("selection formatting keeps sibling and closing tag indent using parent con
           "id"
         ],
         closingStyle: "explicit",
-        closingBracketPosition: "new-line"
+        closingBracketPosition: "next-line"
       }
     }
   });
@@ -108,5 +108,31 @@ test("selection formatting keeps second line of multiline tag indented", () => {
   assert.equal(
     output,
     "  <input pInputText id=\"name\" type=\"text\" maxlength=\"100\"\n    formControlName=\"name\" required [pAutoFocus]=\"true\" [autofocus]=\"true\">\n</div>"
+  );
+});
+
+test("selection formatting does not duplicate explicit closing tags when moving them to the next line", () => {
+  const selection =
+    "<p-inputnumber\ninputId=\"packageWeight\"\nmode=\"decimal\"\n[locale]=\"currentLocale()\"\n[maxFractionDigits]=\"2\"\n[min]=\"0\"\nformControlName=\"packageWeight\"\n></p-inputnumber>\n</div>";
+  const prefix = "<form>\n  <div>\n";
+  const config = createConfig({
+    tags: {
+      "p-inputnumber": {
+        attributeOrder: ["inputId", "mode", "locale", "maxFractionDigits", "min", "formControlName"],
+        attributeLayout: "multi-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line",
+        closingTagPosition: "next-line"
+      }
+    }
+  });
+
+  const output = formatText(selection, config, createLogger(), {
+    initialIndentLevel: getIndentLevelAtEnd(prefix)
+  });
+
+  assert.equal(
+    output,
+    "    <p-inputnumber\n      inputId=\"packageWeight\"\n      mode=\"decimal\"\n      [locale]=\"currentLocale()\"\n      [maxFractionDigits]=\"2\"\n      [min]=\"0\"\n      formControlName=\"packageWeight\">\n    </p-inputnumber>\n  </div>"
   );
 });

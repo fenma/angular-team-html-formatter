@@ -97,8 +97,8 @@ test("normalizeConfig ignores closing settings that do not apply to void tags", 
       tags: {
         input: {
           closingStyle: "explicit",
-          closingBracketPosition: "new-line",
-          closingTagPosition: "new-line"
+          closingBracketPosition: "next-line",
+          closingTagPosition: "next-line"
         }
       }
     },
@@ -106,7 +106,7 @@ test("normalizeConfig ignores closing settings that do not apply to void tags", 
   );
 
   assert.equal(config.tags.input.closingStyle, undefined);
-  assert.equal(config.tags.input.closingBracketPosition, "new-line");
+  assert.equal(config.tags.input.closingBracketPosition, "next-line");
   assert.equal(config.tags.input.closingTagPosition, undefined);
   assert.deepEqual(diagnostics, [
     'Ignoring closingStyle on void tag "input". Void tags cannot use closingStyle.',

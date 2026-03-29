@@ -9,8 +9,8 @@ test("collectConfigDiagnostics reports unsupported closing settings on void tags
     "tags": {
       "input": {
         "closingStyle": "explicit",
-        "closingTagPosition": "new-line",
-        "closingBracketPosition": "new-line"
+        "closingTagPosition": "next-line",
+        "closingBracketPosition": "next-line"
       }
     }
   }`);
@@ -26,7 +26,7 @@ test("collectConfigDiagnostics ignores allowed settings on void tags", () => {
   const diagnostics = collectConfigDiagnostics(`{
     "tags": {
       "input": {
-        "closingBracketPosition": "new-line"
+        "closingBracketPosition": "next-line"
       }
     }
   }`);

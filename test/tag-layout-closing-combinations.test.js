@@ -7,8 +7,8 @@ const { createConfig, createLogger } = require("../test-support/helpers");
 
 const ATTRIBUTE_LAYOUTS = ["preserve", "multi-line", "single-line"];
 const CLOSING_STYLES = ["self-closing", "explicit"];
-const BRACKET_POSITIONS = ["same-line", "new-line"];
-const CLOSING_TAG_POSITIONS = ["same-line", "new-line"];
+const BRACKET_POSITIONS = ["same-line", "next-line"];
+const CLOSING_TAG_POSITIONS = ["same-line", "next-line"];
 
 function createTagRule(overrides = {}) {
   return {
@@ -33,14 +33,14 @@ function createExpectedOutput(attributeLayout, closingStyle, closingBracketPosit
     if (closingBracketPosition === "same-line") {
       return closingStyle === "self-closing"
         ? `${inlineStartTag} />`
-        : closingTagPosition === "new-line"
+        : closingTagPosition === "next-line"
           ? `${inlineStartTag}>\n</p-select>`
           : `${inlineStartTag}></p-select>`;
     }
 
     return closingStyle === "self-closing"
       ? `${inlineStartTag}\n/>`
-      : closingTagPosition === "new-line"
+      : closingTagPosition === "next-line"
         ? `${inlineStartTag}\n>\n</p-select>`
         : `${inlineStartTag}\n></p-select>`;
   }
@@ -48,7 +48,7 @@ function createExpectedOutput(attributeLayout, closingStyle, closingBracketPosit
   if (attributeLayout === "preserve" && closingBracketPosition === "same-line") {
     return closingStyle === "self-closing"
       ? `${inlineStartTag} />`
-      : closingTagPosition === "new-line"
+      : closingTagPosition === "next-line"
         ? `${inlineStartTag}>\n</p-select>`
         : `${inlineStartTag}></p-select>`;
   }
@@ -56,14 +56,14 @@ function createExpectedOutput(attributeLayout, closingStyle, closingBracketPosit
   if (closingBracketPosition === "same-line") {
     return closingStyle === "self-closing"
       ? `${multilineStartTag} />`
-      : closingTagPosition === "new-line"
+      : closingTagPosition === "next-line"
         ? `${multilineStartTag}>\n</p-select>`
         : `${multilineStartTag}></p-select>`;
   }
 
   return closingStyle === "self-closing"
     ? `${multilineStartTag}\n/>`
-    : closingTagPosition === "new-line"
+    : closingTagPosition === "next-line"
       ? `${multilineStartTag}\n>\n</p-select>`
       : `${multilineStartTag}\n></p-select>`;
 }
@@ -173,13 +173,13 @@ test("tag attributeLayout preserve can override multi-line known tag defaults", 
   assert.equal(output, "<p-select inputId=\"order\" class=\"w-full\" [options]=\"items\" />");
 });
 
-test("knownTagDefaults can drive explicit new-line closing tag formatting", () => {
+test("knownTagDefaults can drive explicit next-line closing tag formatting", () => {
   const input = "<p-select\n  class=\"w-full\"\n  [options]=\"name\"\n/>";
   const config = createConfig({
     knownTagDefaults: {
       closingStyle: "explicit",
-      closingBracketPosition: "new-line",
-      closingTagPosition: "new-line"
+      closingBracketPosition: "next-line",
+      closingTagPosition: "next-line"
     },
     tags: {
       "p-select": {
@@ -192,7 +192,7 @@ test("knownTagDefaults can drive explicit new-line closing tag formatting", () =
   assert.equal(output, "<p-select\n  class=\"w-full\"\n  [options]=\"name\"\n>\n</p-select>");
 });
 
-test("single-line explicit same-line bracket with new-line closing tag puts the end tag on the next line", () => {
+test("single-line explicit same-line bracket with next-line closing tag puts the end tag on the next line", () => {
   const input = "<p-select\n  class=\"w-full\"\n  [options]=\"items\"\n/>";
   const config = createConfig({
     tags: {
@@ -201,7 +201,7 @@ test("single-line explicit same-line bracket with new-line closing tag puts the 
         attributeLayout: "single-line",
         closingStyle: "explicit",
         closingBracketPosition: "same-line",
-        closingTagPosition: "new-line"
+        closingTagPosition: "next-line"
       }
     }
   });
@@ -210,7 +210,7 @@ test("single-line explicit same-line bracket with new-line closing tag puts the 
   assert.equal(output, "<p-select class=\"w-full\" [options]=\"items\">\n</p-select>");
 });
 
-test("single-line explicit new-line bracket with new-line closing tag keeps both on their own lines", () => {
+test("single-line explicit next-line bracket with next-line closing tag keeps both on their own lines", () => {
   const input = "<p-select\n  class=\"w-full\"\n  [options]=\"items\"\n/>";
   const config = createConfig({
     tags: {
@@ -218,8 +218,8 @@ test("single-line explicit new-line bracket with new-line closing tag keeps both
         attributeOrder: ["class", "options"],
         attributeLayout: "single-line",
         closingStyle: "explicit",
-        closingBracketPosition: "new-line",
-        closingTagPosition: "new-line"
+        closingBracketPosition: "next-line",
+        closingTagPosition: "next-line"
       }
     }
   });
@@ -234,7 +234,7 @@ test("tag-specific closingTagPosition overrides global default", () => {
     knownTagDefaults: {
       closingStyle: "explicit",
       closingBracketPosition: "same-line",
-      closingTagPosition: "new-line"
+      closingTagPosition: "next-line"
     },
     tags: {
       "p-select": {
@@ -248,7 +248,7 @@ test("tag-specific closingTagPosition overrides global default", () => {
   assert.equal(output, "<p-select\n  class=\"w-full\"\n  [options]=\"name\"></p-select>");
 });
 
-test("knownTagDefaults closingTagPosition preserve keeps an existing new-line closing tag", () => {
+test("knownTagDefaults closingTagPosition preserve keeps an existing next-line closing tag", () => {
   const input = "<p-select class=\"w-full\">\n</p-select>";
   const config = createConfig({
     knownTagDefaults: {
@@ -268,7 +268,7 @@ test("knownTagDefaults closingTagPosition preserve keeps an existing new-line cl
   assert.equal(output, "<p-select\n  class=\"w-full\">\n</p-select>");
 });
 
-test("knownTagDefaults closingBracketPosition preserve keeps an existing new-line closing bracket", () => {
+test("knownTagDefaults closingBracketPosition preserve keeps an existing next-line closing bracket", () => {
   const input = "<p-select\n  class=\"w-full\"\n/>";
   const config = createConfig({
     knownTagDefaults: {
@@ -287,7 +287,7 @@ test("knownTagDefaults closingBracketPosition preserve keeps an existing new-lin
   assert.equal(output, "<p-select\n  class=\"w-full\"\n/>");
 });
 
-test("existing explicit tags honor same-line bracket and new-line closing tag", () => {
+test("existing explicit tags honor same-line bracket and next-line closing tag", () => {
   const input =
     "<p-select\n  class=\"w-full\"\n  [options]=\"transportModeData\"\n  [placeholder]=\"dropdownPlaceholder\"\n  [showClear]=\"true\"\n  optionLabel=\"mode\"\n  optionValue=\"id\"\n  formControlName=\"transportModeId\"\n  id=\"transportModeId\"\n></p-select>";
   const config = createConfig({
@@ -305,7 +305,7 @@ test("existing explicit tags honor same-line bracket and new-line closing tag", 
         ],
         closingStyle: "explicit",
         closingBracketPosition: "same-line",
-        closingTagPosition: "new-line"
+        closingTagPosition: "next-line"
       }
     }
   });
@@ -343,7 +343,7 @@ test("void tags ignore explicit closingStyle and keep self-closing output", () =
         attributeOrder: ["pInputText", "id", "type", "formControlName", "maxlength"],
         attributeLayout: "single-line",
         closingStyle: "explicit",
-        closingBracketPosition: "new-line",
+        closingBracketPosition: "next-line",
         closingTagPosition: "same-line"
       }
     }
@@ -383,13 +383,13 @@ test("self-closing rules do not collapse known tags that contain child elements"
   assert.equal(output, "<mytag><div>test</div></mytag>");
 });
 
-test("self-closing fallback keeps explicit text content and still honors new-line closing bracket", () => {
+test("self-closing fallback keeps explicit text content and still honors next-line closing bracket", () => {
   const input = "<mytag>halo</mytag>";
   const config = createConfig({
     tags: {
       mytag: {
         closingStyle: "self-closing",
-        closingBracketPosition: "new-line"
+        closingBracketPosition: "next-line"
       }
     }
   });
@@ -398,13 +398,13 @@ test("self-closing fallback keeps explicit text content and still honors new-lin
   assert.equal(output, "<mytag>halo</mytag>");
 });
 
-test("self-closing fallback keeps child elements and still honors new-line closing bracket", () => {
+test("self-closing fallback keeps child elements and still honors next-line closing bracket", () => {
   const input = "<mytag><div>test</div></mytag>";
   const config = createConfig({
     tags: {
       mytag: {
         closingStyle: "self-closing",
-        closingBracketPosition: "new-line"
+        closingBracketPosition: "next-line"
       }
     }
   });
@@ -413,7 +413,7 @@ test("self-closing fallback keeps child elements and still honors new-line closi
   assert.equal(output, "<mytag><div>test</div></mytag>");
 });
 
-test("self-closing fallback keeps attributes and child elements while honoring new-line closing bracket", () => {
+test("self-closing fallback keeps attributes and child elements while honoring next-line closing bracket", () => {
   const input = "<mytag class=\"hero\" data-id=\"7\"><div>test</div></mytag>";
   const config = createConfig({
     tags: {
@@ -421,7 +421,7 @@ test("self-closing fallback keeps attributes and child elements while honoring n
         attributeOrder: ["class", "data-id"],
         attributeLayout: "multi-line",
         closingStyle: "self-closing",
-        closingBracketPosition: "new-line"
+        closingBracketPosition: "next-line"
       }
     }
   });
@@ -430,13 +430,13 @@ test("self-closing fallback keeps attributes and child elements while honoring n
   assert.equal(output, "<mytag\n  class=\"hero\"\n  data-id=\"7\"\n>\n  <div>test</div></mytag>");
 });
 
-test("explicit formatting without attributes ignores new-line closing bracket", () => {
+test("explicit formatting without attributes ignores next-line closing bracket", () => {
   const input = "<mytag></mytag>";
   const config = createConfig({
     tags: {
       mytag: {
         closingStyle: "explicit",
-        closingBracketPosition: "new-line",
+        closingBracketPosition: "next-line",
         closingTagPosition: "same-line"
       }
     }
@@ -446,13 +446,13 @@ test("explicit formatting without attributes ignores new-line closing bracket", 
   assert.equal(output, "<mytag></mytag>");
 });
 
-test("self-closing formatting without attributes ignores new-line closing bracket", () => {
+test("self-closing formatting without attributes ignores next-line closing bracket", () => {
   const input = "<mytag></mytag>";
   const config = createConfig({
     tags: {
       mytag: {
         closingStyle: "self-closing",
-        closingBracketPosition: "new-line"
+        closingBracketPosition: "next-line"
       }
     }
   });
@@ -470,11 +470,55 @@ test("explicit formatting preserves existing text content", () => {
         attributeLayout: "multi-line",
         closingStyle: "explicit",
         closingBracketPosition: "same-line",
-        closingTagPosition: "new-line"
+        closingTagPosition: "next-line"
       }
     }
   });
 
   const output = formatText(input, config, createLogger());
   assert.equal(output, "<p-select\n  class=\"w-full\">halo</p-select>");
+});
+
+test("p-inputNumber explicit same-line bracket with next-line closing tag does not duplicate the end tag", () => {
+  const input =
+    "<p-inputnumber\n                  inputId=\"packageWeight\"\n                  mode=\"decimal\"\n                  [locale]=\"currentLocale()\"\n                  [maxFractionDigits]=\"2\"\n                  [min]=\"0\"\n                  formControlName=\"packageWeight\"\n                ></p-inputnumber>";
+  const config = createConfig({
+    tags: {
+      "p-inputNumber": {
+        attributeOrder: ["inputId", "mode", "locale", "maxFractionDigits", "min", "max", "formControlName"],
+        attributeLayout: "multi-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line",
+        closingTagPosition: "next-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<p-inputnumber\n  inputId=\"packageWeight\"\n  mode=\"decimal\"\n  [locale]=\"currentLocale()\"\n  [maxFractionDigits]=\"2\"\n  [min]=\"0\"\n  formControlName=\"packageWeight\">\n</p-inputnumber>"
+  );
+});
+
+test("full block with p-inputnumber keeps a single explicit closing tag on the next line", () => {
+  const input =
+    "<div class=\"field basis-1/2 required\">\n  <label for=\"packageWeight\">\n    Weight (<a [routerLink]=\"\" (click)=\"toggleWeightUnit()\">{{showAsKg ? 'kg' : 'lbs'}}</a>)\n  </label>\n  <p-inputnumber\n    inputId=\"packageWeight\"\n    mode=\"decimal\"\n    [locale]=\"currentLocale()\"\n    [maxFractionDigits]=\"2\"\n    [min]=\"0\"\n    formControlName=\"packageWeight\"\n  ></p-inputnumber>\n  <app-validation-text controlName=\"packageWeight\" label=\"Weight\"></app-validation-text>\n</div>";
+  const config = createConfig({
+    tags: {
+      "p-inputNumber": {
+        attributeOrder: ["inputId", "mode", "locale", "maxFractionDigits", "min", "max", "formControlName"],
+        attributeLayout: "multi-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line",
+        closingTagPosition: "next-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<div class=\"field basis-1/2 required\">\n  <label for=\"packageWeight\">\n    Weight (<a [routerLink]=\"\" (click)=\"toggleWeightUnit()\">{{showAsKg ? 'kg' : 'lbs'}}</a>)\n  </label>\n  <p-inputnumber\n    inputId=\"packageWeight\"\n    mode=\"decimal\"\n    [locale]=\"currentLocale()\"\n    [maxFractionDigits]=\"2\"\n    [min]=\"0\"\n    formControlName=\"packageWeight\">\n  </p-inputnumber>\n  <app-validation-text controlName=\"packageWeight\" label=\"Weight\"></app-validation-text>\n</div>"
+  );
 });

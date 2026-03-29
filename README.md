@@ -58,13 +58,13 @@ Create `html-formatter.config.jsonc` in your project root:
   "knownTagDefaults": {
     "firstLineAttributes": [],
     "attributeOrder": [],
-    "unknownAttributesPosition": "last",   // first | last
-    "sortUnknownAttributes": "preserve",   // preserve | alphabetical
+    "unknownAttributesPosition": "last",    // first | last
+    "sortUnknownAttributes": "preserve",    // preserve | alphabetical
     "maxAttributeLineWidth": 100,
-    "attributeLayout": "preserve",         // preserve | multi-line | single-line
-    "closingStyle": "explicit",            // preserve | self-closing | explicit
-    "closingBracketPosition": "new-line",  // preserve | same-line | new-line
-    "closingTagPosition": "same-line"      // preserve | same-line | new-line
+    "attributeLayout": "preserve",          // preserve | multi-line | single-line
+    "closingStyle": "explicit",             // preserve | self-closing | explicit
+    "closingBracketPosition": "next-line",  // preserve | same-line | next-line
+    "closingTagPosition": "same-line"       // preserve | same-line | next-line
   },
   "tags": {
     "p-select": {
@@ -79,13 +79,9 @@ Create `html-formatter.config.jsonc` in your project root:
         "optionValue",
         "formControlName"
       ],
-      "attributeLayout": "single-line",
-      "maxAttributeLineWidth": 100,
-      "unknownAttributesPosition": "last",
-      "sortUnknownAttributes": "preserve",
-      "closingStyle": "explicit",
-      "closingBracketPosition": "new-line",
-      "closingTagPosition": "same-line"
+      "attributeLayout": "multi-line",
+      "closingStyle": "self-closing",
+      "closingBracketPosition": "same-line"
     }
   }
 }
@@ -147,7 +143,7 @@ Example:
     "unknownAttributesPosition": "last",
     "sortUnknownAttributes": "preserve",
     "closingStyle": "explicit",
-    "closingBracketPosition": "new-line",
+    "closingBracketPosition": "next-line",
     "closingTagPosition": "same-line"
   }
 }
@@ -405,7 +401,7 @@ Supported values:
 
 - `"preserve"`: keep the existing style when possible, otherwise use the formatter's safe fallback
 - `"same-line"`: put the closing `>` or `/>` on the same line as the final attribute
-- `"new-line"`: put the closing `>` or `/>` on its own line
+- `"next-line"`: put the closing `>` or `/>` on its own next line
 
 Default:
 
@@ -419,7 +415,7 @@ Example with `"same-line"`:
   class="w-full" />
 ```
 
-Example with `"new-line"`:
+Example with `"next-line"`:
 
 ```html
 <p-select
@@ -436,7 +432,7 @@ Supported values:
 
 - `"preserve"`: keep the existing style when possible, otherwise use the formatter's safe fallback
 - `"same-line"`: keep `</tag>` on the same line as the opening bracket line
-- `"new-line"`: move `</tag>` to its own next line
+- `"next-line"`: move `</tag>` to its own next line
 
 Default:
 
@@ -451,7 +447,7 @@ Example with `"same-line"`:
 ></p-select>
 ```
 
-Example with `"new-line"`:
+Example with `"next-line"`:
 
 ```html
 <p-select

@@ -314,11 +314,11 @@ function normalizeTagRule(rule, tagName, diagnostics, baseRule) {
     }
   }
 
-  if (["preserve", "same-line", "new-line"].includes(rule.closingBracketPosition)) {
+  if (["preserve", "same-line", "next-line"].includes(rule.closingBracketPosition)) {
     normalized.closingBracketPosition = rule.closingBracketPosition;
   }
 
-  if (["preserve", "same-line", "new-line"].includes(rule.closingTagPosition)) {
+  if (["preserve", "same-line", "next-line"].includes(rule.closingTagPosition)) {
     if (voidTag) {
       diagnostics.push(`Ignoring closingTagPosition on void tag "${tagName}". Void tags do not have end tags.`);
     } else {

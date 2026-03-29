@@ -158,10 +158,10 @@ function shouldMoveContentAfterNewLineClosingBracket(serializedStartTag, token, 
 /**
  * @param {import("../parser/html-tokenizer").TagToken} startToken
  * @param {import("../parser/html-tokenizer").TagToken} endToken
- * @returns {"same-line" | "new-line"}
+ * @returns {"same-line" | "next-line"}
  */
 function getOriginalClosingTagPosition(startToken, endToken) {
-  return endToken.startLine > startToken.endLine ? "new-line" : "same-line";
+  return endToken.startLine > startToken.endLine ? "next-line" : "same-line";
 }
 
 /**
