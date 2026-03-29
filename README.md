@@ -56,6 +56,7 @@ Create `html-formatter.config.jsonc` in your project root:
     "unknownTags": "indent-only" // indent-only
   },
   "knownTagDefaults": {
+    "firstLineAttributes": [],
     "attributeOrder": [],
     "unknownAttributesPosition": "last",   // first | last
     "sortUnknownAttributes": "preserve",   // preserve | alphabetical
@@ -67,6 +68,7 @@ Create `html-formatter.config.jsonc` in your project root:
   },
   "tags": {
     "p-select": {
+      "firstLineAttributes": [],
       "attributeOrder": [
         "inputId",
         "class",
@@ -125,6 +127,7 @@ If a tag does not define a rule, the value from `knownTagDefaults` is used.
 
 Supported fields:
 
+- `firstLineAttributes`
 - `attributeOrder`
 - `attributeLayout`
 - `maxAttributeLineWidth`
@@ -172,6 +175,52 @@ Example:
 ### Tag rule settings
 
 Each tag under `tags` can use the following options.
+
+#### `firstLineAttributes`
+
+Defines attributes that should stay on the same line as the tag name before the remaining attributes are laid out.
+
+Supported forms:
+
+- string entries, for example `"#dt1"`
+- object entries, for example `{ "name": "picker", "kinds": ["template-ref"] }`
+
+Behavior:
+
+- attributes listed here are moved directly after the tag name on the first line
+- they are matched in the exact order listed here
+- these attributes do not need to appear in `attributeOrder`
+- after they are placed, `attributeLayout` is applied to the remaining attributes
+- with `"multi-line"`, the remaining attributes are placed on following lines
+- with `"single-line"`, the remaining attributes continue on the same line unless width wrapping moves them
+
+Example:
+
+```json
+{
+  "firstLineAttributes": ["#dt1"]
+}
+```
+
+With:
+
+```json
+{
+  "firstLineAttributes": ["#dt1"],
+  "attributeOrder": ["class", "value", "formGroup", "paginator"],
+  "attributeLayout": "multi-line"
+}
+```
+
+This formats to:
+
+```html
+<p-table #dt1
+  class="p-datatable-sm"
+  [value]="models"
+  [formGroup]="formGroup"
+  [paginator]="true">
+```
 
 #### `attributeOrder`
 
@@ -255,7 +304,7 @@ Example:
 
 #### `attributeLayout`
 
-Controls whether known-tag attributes stay in their current layout or are forced onto separate lines.
+Controls whether known-tag attributes stay in their current layout or are forced onto separate lines. If `firstLineAttributes` is configured, this setting applies to the remaining attributes after those first-line attributes are placed.
 
 Supported values:
 

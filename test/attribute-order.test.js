@@ -75,3 +75,47 @@ test("angular bindings remain intact", () => {
     "<p-select [(ngModel)]=\"value\" [options]=\"items\" (onChange)=\"save($event)\" *ngIf=\"ready\" #picker />"
   );
 });
+
+test("firstLineAttributes stay on the opening line before multi-line ordered attributes", () => {
+  const input =
+    "<p-table [value]=\"models\" [paginator]=\"true\" class=\"p-datatable-sm\" #dt1 [formGroup]=\"formGroup\"></p-table>";
+  const config = createConfig({
+    tags: {
+      "p-table": {
+        firstLineAttributes: ["#dt1"],
+        attributeOrder: ["class", "value", "formGroup", "paginator"],
+        attributeLayout: "multi-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<p-table #dt1\n  class=\"p-datatable-sm\"\n  [value]=\"models\"\n  [formGroup]=\"formGroup\"\n  [paginator]=\"true\"></p-table>"
+  );
+});
+
+test("firstLineAttributes stay on the opening line before single-line ordered attributes", () => {
+  const input =
+    "<p-table [value]=\"models\" [paginator]=\"true\" class=\"p-datatable-sm\" #dt1 [formGroup]=\"formGroup\"></p-table>";
+  const config = createConfig({
+    tags: {
+      "p-table": {
+        firstLineAttributes: ["#dt1"],
+        attributeOrder: ["class", "value", "formGroup", "paginator"],
+        attributeLayout: "single-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<p-table #dt1 class=\"p-datatable-sm\" [value]=\"models\" [formGroup]=\"formGroup\" [paginator]=\"true\"></p-table>"
+  );
+});

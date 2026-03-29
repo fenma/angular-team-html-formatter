@@ -119,6 +119,13 @@
             "$ref": "#/definitions/attributeOrderEntry"
           }
         },
+        "firstLineAttributes": {
+          "type": "array",
+          "description": "Attributes that should stay on the opening line before layout rules are applied to the remaining attributes.",
+          "items": {
+            "$ref": "#/definitions/attributeOrderEntry"
+          }
+        },
         "unknownAttributesPosition": {
           "type": "string",
           "enum": ["first", "last"],
@@ -170,6 +177,13 @@
         "attributeOrder": {
           "type": "array",
           "description": "Deterministic attribute order for this tag.",
+          "items": {
+            "$ref": "#/definitions/attributeOrderEntry"
+          }
+        },
+        "firstLineAttributes": {
+          "type": "array",
+          "description": "Attributes that should stay on the opening line before layout rules are applied to the remaining attributes.",
           "items": {
             "$ref": "#/definitions/attributeOrderEntry"
           }

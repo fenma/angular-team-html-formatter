@@ -278,6 +278,12 @@ function normalizeTagRule(rule, tagName, diagnostics, baseRule) {
   const normalized = clone(baseRule);
   const voidTag = isVoidTag(String(tagName).toLowerCase());
 
+  if (Array.isArray(rule.firstLineAttributes)) {
+    normalized.firstLineAttributes = rule.firstLineAttributes
+      .map((entry) => normalizeAttributeOrderEntry(entry, tagName, diagnostics))
+      .filter(Boolean);
+  }
+
   if (Array.isArray(rule.attributeOrder)) {
     normalized.attributeOrder = rule.attributeOrder
       .map((entry) => normalizeAttributeOrderEntry(entry, tagName, diagnostics))

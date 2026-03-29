@@ -38,17 +38,19 @@ function resolveClosingStyle(text, tokens, tokenIndex, rule) {
 
 /**
  * @param {string} tagName
- * @param {import("../parser/html-tokenizer").AttributeToken[]} attributes
+ * @param {import("../parser/html-tokenizer").AttributeToken[]} firstLineAttributes
+ * @param {import("../parser/html-tokenizer").AttributeToken[]} remainingAttributes
  * @param {"self-closing" | "explicit"} closingStyle
  * @param {object} rule
  * @param {string} originalRaw
  * @returns {string}
  */
-function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw) {
-  const attributeTexts = attributes.map((attribute) => attribute.raw);
+function serializeStartTag(tagName, firstLineAttributes, remainingAttributes, closingStyle, rule, originalRaw) {
+  const allAttributes = firstLineAttributes.concat(remainingAttributes);
   const closingBracketPosition = resolveClosingBracketPosition(rule, originalRaw);
+  const startTagLine = buildStartTagLine(tagName, firstLineAttributes);
 
-  if (!attributeTexts.length) {
+  if (!allAttributes.length) {
     if (closingStyle === "self-closing") {
       return `<${tagName} />`;
     }
@@ -56,7 +58,7 @@ function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw)
   }
 
   if (rule.attributeLayout === "single-line") {
-    const wrappedLines = buildWrappedAttributeLines(tagName, attributes, rule.maxAttributeLineWidth);
+    const wrappedLines = buildWrappedAttributeLines(startTagLine, remainingAttributes, rule.maxAttributeLineWidth);
     if (wrappedLines.length === 1 && closingBracketPosition !== "new-line") {
       const suffix = closingStyle === "self-closing" ? " />" : ">";
       return `${wrappedLines[0]}${suffix}`;
@@ -70,11 +72,24 @@ function serializeStartTag(tagName, attributes, closingStyle, rule, originalRaw)
 
   if (!prefersMultiline) {
     const suffix = closingStyle === "self-closing" ? " />" : ">";
-    return `<${tagName} ${attributeTexts.join(" ")}${suffix}`;
+    return `${buildStartTagLine(tagName, allAttributes)}${suffix}`;
   }
 
-  const lines = buildMultilineTagLines(tagName, attributes, originalRaw, rule);
+  const lines = buildMultilineTagLines(tagName, firstLineAttributes, remainingAttributes, originalRaw, rule);
   return finalizeMultilineStartTag(lines, closingStyle, closingBracketPosition);
+}
+
+/**
+ * @param {string} tagName
+ * @param {import("../parser/html-tokenizer").AttributeToken[]} attributes
+ * @returns {string}
+ */
+function buildStartTagLine(tagName, attributes) {
+  if (!attributes.length) {
+    return `<${tagName}`;
+  }
+
+  return `<${tagName} ${attributes.map((attribute) => attribute.raw).join(" ")}`;
 }
 
 /**
@@ -150,27 +165,35 @@ function resolveExplicitClosingTagPosition(rule, originalClosingTagPosition = nu
  * Preserves the original multiline attribute grouping as much as possible.
  *
  * @param {string} tagName
- * @param {import("../parser/html-tokenizer").AttributeToken[]} attributes
+ * @param {import("../parser/html-tokenizer").AttributeToken[]} firstLineAttributes
+ * @param {import("../parser/html-tokenizer").AttributeToken[]} remainingAttributes
  * @param {string} originalRaw
  * @param {object} rule
  * @returns {string[]}
  */
-function buildMultilineTagLines(tagName, attributes, originalRaw, rule) {
+function buildMultilineTagLines(tagName, firstLineAttributes, remainingAttributes, originalRaw, rule) {
+  const startTagLine = buildStartTagLine(tagName, firstLineAttributes);
+
   if (rule.attributeLayout === "multi-line") {
-    return [`<${tagName}`, ...attributes.map((attribute) => attribute.raw)];
+    return [startTagLine, ...remainingAttributes.map((attribute) => attribute.raw)];
   }
 
   if (rule.attributeLayout === "single-line") {
-    return buildWrappedAttributeLines(tagName, attributes, rule.maxAttributeLineWidth);
+    return buildWrappedAttributeLines(startTagLine, remainingAttributes, rule.maxAttributeLineWidth);
   }
 
+  if (firstLineAttributes.length > 0) {
+    return [startTagLine, ...remainingAttributes.map((attribute) => attribute.raw)];
+  }
+
+  const attributes = firstLineAttributes.concat(remainingAttributes);
   const groups = getOriginalAttributeLineGroups(attributes, originalRaw);
   const lines = [];
   let cursor = 0;
 
   if (groups.firstLineCount > 0) {
-    const firstLineAttributes = attributes.slice(0, groups.firstLineCount).map((attribute) => attribute.raw);
-    lines.push(`<${tagName} ${firstLineAttributes.join(" ")}`);
+    const groupedFirstLineAttributes = attributes.slice(0, groups.firstLineCount).map((attribute) => attribute.raw);
+    lines.push(`<${tagName} ${groupedFirstLineAttributes.join(" ")}`);
     cursor += groups.firstLineCount;
   } else {
     lines.push(`<${tagName}`);
@@ -200,23 +223,23 @@ function buildMultilineTagLines(tagName, attributes, originalRaw, rule) {
  * Packs as many attributes as possible on each line until the configured width
  * would be exceeded, then continues on the next line.
  *
- * @param {string} tagName
+ * @param {string} firstLine
  * @param {import("../parser/html-tokenizer").AttributeToken[]} attributes
  * @param {number | null | undefined} maxWidth
  * @returns {string[]}
  */
-function buildWrappedAttributeLines(tagName, attributes, maxWidth) {
-  const lines = [`<${tagName}`];
+function buildWrappedAttributeLines(firstLine, attributes, maxWidth) {
+  const lines = [firstLine];
   let lineIndex = 0;
 
   for (const attribute of attributes) {
-    const separator = lineIndex === 0 && lines[lineIndex] === `<${tagName}` ? " " : " ";
+    const separator = " ";
     const candidateLine = `${lines[lineIndex]}${separator}${attribute.raw}`;
     const shouldWrap =
       Number.isInteger(maxWidth) &&
       maxWidth > 0 &&
       candidateLine.length > maxWidth &&
-      (lineIndex > 0 || lines[lineIndex] !== `<${tagName}`);
+      (lineIndex > 0 || lines[lineIndex] !== firstLine);
 
     if (shouldWrap) {
       lines.push(attribute.raw);

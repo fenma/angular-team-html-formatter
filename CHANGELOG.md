@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.4.0
+
+- Added `firstLineAttributes` so selected attributes can stay on the tag line before the remaining attributes follow the configured `attributeLayout`
+- Fixed configured non-empty tags so child content and text are preserved when `closingStyle` would otherwise collapse them
+- Fixed `closingTagPosition: "preserve"` so explicit closing tags keep their original same-line or new-line placement
+- Fixed `closingBracketPosition: "preserve"` so known tags keep an existing multi-line bracket layout
+- Fixed `closingBracketPosition` semantics so `"new-line"` only applies when a tag has attributes, and tags without attributes keep `>` on the tag line
+- Added regression coverage for tags with text, child elements, attributes, and inherited known-tag defaults across closing-style combinations
+
 ## 0.3.0
 
 - Fixed void tags such as `input` so they always format as self-closing, even when `closingStyle` is set to `explicit`

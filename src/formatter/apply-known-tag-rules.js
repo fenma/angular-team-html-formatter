@@ -1,7 +1,7 @@
 "use strict";
 
 const { getTagRule } = require("../rules/tag-matcher");
-const { sortAttributes } = require("../rules/attribute-order");
+const { arrangeAttributes } = require("../rules/attribute-order");
 const {
   appendExplicitClosingTag,
   resolveClosingStyle,
@@ -67,12 +67,19 @@ function applyKnownTagRules(text, tokens, config, logger) {
  */
 function buildTagReplacement(text, tokens, tokenIndex, rule, logger) {
   const token = tokens[tokenIndex];
-  const sortedAttributes = sortAttributes(token.attributes, rule);
+  const arrangedAttributes = arrangeAttributes(token.attributes, rule);
   const desiredClosingStyle = resolveClosingStyle(text, tokens, tokenIndex, rule);
-  const serializedStartTag = serializeStartTag(token.tagName, sortedAttributes, desiredClosingStyle, rule, token.raw);
+  const serializedStartTag = serializeStartTag(
+    token.tagName,
+    arrangedAttributes.firstLineAttributes,
+    arrangedAttributes.remainingAttributes,
+    desiredClosingStyle,
+    rule,
+    token.raw
+  );
 
   if (desiredClosingStyle === "self-closing") {
-    return buildSelfClosingReplacement(text, tokens, tokenIndex, serializedStartTag, sortedAttributes, rule, logger);
+    return buildSelfClosingReplacement(text, tokens, tokenIndex, serializedStartTag, arrangedAttributes, rule, logger);
   }
 
   if (desiredClosingStyle === "explicit" && token.selfClosing) {
@@ -162,12 +169,12 @@ function getOriginalClosingTagPosition(startToken, endToken) {
  * @param {ReturnType<import("../parser/html-tokenizer").tokenizeHtml>} tokens
  * @param {number} tokenIndex
  * @param {string} serializedStartTag
- * @param {import("../parser/html-tokenizer").AttributeToken[]} sortedAttributes
+ * @param {{firstLineAttributes: import("../parser/html-tokenizer").AttributeToken[], remainingAttributes: import("../parser/html-tokenizer").AttributeToken[]}} arrangedAttributes
  * @param {object} rule
  * @param {{debug(message: string): void, warn(message: string): void}} logger
  * @returns {{replacement: {start: number, end: number, text: string}, consumedTokenIndexes: number[]}}
  */
-function buildSelfClosingReplacement(text, tokens, tokenIndex, serializedStartTag, sortedAttributes, rule, logger) {
+function buildSelfClosingReplacement(text, tokens, tokenIndex, serializedStartTag, arrangedAttributes, rule, logger) {
   const token = tokens[tokenIndex];
   const trailingEndTokenIndex = findTrailingExplicitEndToken(text, tokens, tokenIndex);
 
@@ -192,7 +199,14 @@ function buildSelfClosingReplacement(text, tokens, tokenIndex, serializedStartTa
         replacement: {
           start: token.start,
           end: token.end,
-          text: serializeStartTag(token.tagName, sortedAttributes, "explicit", rule, token.raw)
+          text: serializeStartTag(
+            token.tagName,
+            arrangedAttributes.firstLineAttributes,
+            arrangedAttributes.remainingAttributes,
+            "explicit",
+            rule,
+            token.raw
+          )
         },
         consumedTokenIndexes: [tokenIndex]
       };

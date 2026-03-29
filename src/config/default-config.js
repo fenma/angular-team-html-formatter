@@ -15,6 +15,7 @@ const DEFAULT_CONFIG = {
     unknownTags: "indent-only"
   },
   knownTagDefaults: {
+    firstLineAttributes: [],
     attributeOrder: [],
     attributeLayout: "preserve",
     maxAttributeLineWidth: null,

@@ -37,9 +37,32 @@ test("parseJsonc supports inline comments after properties", () => {
 
   const config = normalizeConfig(parsed, []);
   assert.equal(config.indent.size, 4);
+  assert.deepEqual(config.knownTagDefaults.firstLineAttributes, []);
   assert.equal(config.knownTagDefaults.attributeLayout, "single-line");
   assert.equal(config.knownTagDefaults.maxAttributeLineWidth, 80);
   assert.equal(config.knownTagDefaults.closingStyle, "explicit");
+});
+
+test("normalizeConfig reads firstLineAttributes for known tag defaults and per-tag rules", () => {
+  const config = normalizeConfig(
+    {
+      knownTagDefaults: {
+        firstLineAttributes: ["#dt1"]
+      },
+      tags: {
+        "p-table": {
+          firstLineAttributes: ["#table", "class"]
+        }
+      }
+    },
+    []
+  );
+
+  assert.deepEqual(config.knownTagDefaults.firstLineAttributes, [{ name: "#dt1", kinds: null }]);
+  assert.deepEqual(config.tags["p-table"].firstLineAttributes, [
+    { name: "#table", kinds: null },
+    { name: "class", kinds: null }
+  ]);
 });
 
 test("findConfigFile prefers the nearest config between document folder and workspace root", (t) => {
