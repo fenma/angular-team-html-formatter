@@ -94,6 +94,15 @@
               "minLength": 1,
               "description": "Base attribute name to match."
             },
+            "pattern": {
+              "type": "string",
+              "minLength": 1,
+              "description": "JavaScript regular expression pattern to match against the normalized or raw attribute name."
+            },
+            "flags": {
+              "type": "string",
+              "description": "Optional JavaScript regular expression flags, for example i."
+            },
             "kinds": {
               "type": "array",
               "description": "Restrict matching to specific Angular or HTML attribute kinds.",
@@ -104,7 +113,14 @@
               "uniqueItems": true
             }
           },
-          "required": ["name"]
+          "anyOf": [
+            {
+              "required": ["name"]
+            },
+            {
+              "required": ["pattern"]
+            }
+          ]
         }
       ]
     },

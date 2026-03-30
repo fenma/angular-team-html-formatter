@@ -190,6 +190,7 @@ Supported forms:
 
 - string entries, for example `"#dt1"`
 - object entries, for example `{ "name": "picker", "kinds": ["template-ref"] }`
+- regex entries, for example `{ "pattern": "^data-" }`
 
 Behavior:
 
@@ -205,6 +206,14 @@ Example:
 ```json
 {
   "firstLineAttributes": ["#dt1"]
+}
+```
+
+Regex example:
+
+```json
+{
+  "firstLineAttributes": [{ "pattern": "^#" }]
 }
 ```
 
@@ -236,6 +245,7 @@ Supported forms:
 
 - string entries, for example `"optionLabel"`
 - object entries, for example `{ "name": "ngModel", "kinds": ["two-way"] }`
+- regex entries, for example `{ "pattern": "^(aria|data)-" }`
 
 Behavior:
 
@@ -275,6 +285,17 @@ Advanced example:
     { "name": "onChange", "kinds": ["event"] },
     { "name": "ngIf", "kinds": ["structural"] },
     { "name": "picker", "kinds": ["template-ref"] }
+  ]
+}
+```
+
+Regex example:
+
+```json
+{
+  "attributeOrder": [
+    { "pattern": "^(id|inputId)$" },
+    { "pattern": "^(aria|data)-" }
   ]
 }
 ```
@@ -513,6 +534,21 @@ If you need more control, `attributeOrder` also supports objects:
   "kinds": ["two-way"]
 }
 ```
+
+Regex-based matching is also supported in both `attributeOrder` and `firstLineAttributes`:
+
+```json
+{
+  "pattern": "^data-",
+  "flags": "i"
+}
+```
+
+Common regex examples:
+
+- `{ "pattern": "^#" }` matches template refs such as `#dt1` and `#picker`
+- `{ "pattern": "^data-" }` matches attributes that start with `data-`
+- `{ "pattern": "^(id|inputId)$" }` matches exactly `id` or `inputId`
 
 Supported kinds:
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0
+
+- Added regex support for `firstLineAttributes` and `attributeOrder`, including validation, schema support, and examples in the README
+
 ## 0.5.0
 
 - Added tag-setting constraints so standard HTML tags cannot use `closingStyle`, while custom/component tags still can

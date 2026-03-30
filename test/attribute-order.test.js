@@ -119,3 +119,25 @@ test("firstLineAttributes stay on the opening line before single-line ordered at
     "<p-table #dt1 class=\"p-datatable-sm\" [value]=\"models\" [formGroup]=\"formGroup\" [paginator]=\"true\"></p-table>"
   );
 });
+
+test("regex entries work in firstLineAttributes and attributeOrder", () => {
+  const input =
+    "<p-table [value]=\"models\" aria-label=\"Overview\" data-cy=\"orders\" class=\"p-datatable-sm\" data-test=\"grid\" [formGroup]=\"formGroup\"></p-table>";
+  const config = createConfig({
+    tags: {
+      "p-table": {
+        firstLineAttributes: [{ pattern: "^data-" }],
+        attributeOrder: [{ pattern: "^(class|aria-)" }, "value", "formGroup"],
+        attributeLayout: "single-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<p-table data-cy=\"orders\" data-test=\"grid\" aria-label=\"Overview\" class=\"p-datatable-sm\" [value]=\"models\" [formGroup]=\"formGroup\"></p-table>"
+  );
+});

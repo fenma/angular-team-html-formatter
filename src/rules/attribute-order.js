@@ -86,7 +86,7 @@ function arrangeAttributes(attributes, rule) {
 
 /**
  * @param {import("../parser/html-tokenizer").AttributeToken} attribute
- * @param {{name: string, kinds: string[] | null}} orderEntry
+ * @param {{name?: string, pattern?: string, flags?: string, kinds: string[] | null}} orderEntry
  * @returns {boolean}
  */
 function matchesAttribute(attribute, orderEntry) {
@@ -98,7 +98,26 @@ function matchesAttribute(attribute, orderEntry) {
     return false;
   }
 
-  return attribute.baseName === orderEntry.name || attribute.name === orderEntry.name;
+  if (typeof orderEntry.name === "string") {
+    return attribute.baseName === orderEntry.name || attribute.name === orderEntry.name;
+  }
+
+  if (typeof orderEntry.pattern === "string") {
+    const regex = new RegExp(orderEntry.pattern, orderEntry.flags || "");
+    return matchesRegex(regex, attribute.baseName) || matchesRegex(regex, attribute.name);
+  }
+
+  return false;
+}
+
+/**
+ * @param {RegExp} regex
+ * @param {string} value
+ * @returns {boolean}
+ */
+function matchesRegex(regex, value) {
+  regex.lastIndex = 0;
+  return regex.test(value);
 }
 
 module.exports = {

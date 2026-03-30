@@ -339,7 +339,7 @@ function normalizeTagRule(rule, tagName, diagnostics, baseRule) {
  * @param {any} entry
  * @param {string} tagName
  * @param {string[]} diagnostics
- * @returns {{name: string, kinds: string[] | null} | null}
+ * @returns {{name?: string, pattern?: string, flags?: string, kinds: string[] | null} | null}
  */
 function normalizeAttributeOrderEntry(entry, tagName, diagnostics) {
   if (typeof entry === "string" && entry.trim()) {
@@ -358,6 +358,28 @@ function normalizeAttributeOrderEntry(entry, tagName, diagnostics) {
 
     return {
       name: entry.name.trim(),
+      kinds: kinds && kinds.length ? kinds : null
+    };
+  }
+
+  if (entry && typeof entry === "object" && typeof entry.pattern === "string" && entry.pattern.trim()) {
+    const kinds = Array.isArray(entry.kinds)
+      ? entry.kinds.filter((kind) =>
+          ["plain", "property", "event", "two-way", "structural", "template-ref"].includes(kind)
+        )
+      : null;
+    const flags = typeof entry.flags === "string" ? entry.flags : "";
+
+    try {
+      new RegExp(entry.pattern, flags);
+    } catch (error) {
+      diagnostics.push(`Ignoring invalid attributeOrder regex entry on "${tagName}": ${error.message}`);
+      return null;
+    }
+
+    return {
+      pattern: entry.pattern,
+      flags,
       kinds: kinds && kinds.length ? kinds : null
     };
   }

@@ -65,6 +65,42 @@ test("normalizeConfig reads firstLineAttributes for known tag defaults and per-t
   ]);
 });
 
+test("normalizeConfig reads regex-based attribute entries", () => {
+  const config = normalizeConfig(
+    {
+      knownTagDefaults: {
+        firstLineAttributes: [{ pattern: "^data-", flags: "i" }]
+      },
+      tags: {
+        "p-table": {
+          attributeOrder: [{ pattern: "^(aria|data)-" }]
+        }
+      }
+    },
+    []
+  );
+
+  assert.deepEqual(config.knownTagDefaults.firstLineAttributes, [{ pattern: "^data-", flags: "i", kinds: null }]);
+  assert.deepEqual(config.tags["p-table"].attributeOrder, [{ pattern: "^(aria|data)-", flags: "", kinds: null }]);
+});
+
+test("normalizeConfig ignores invalid regex-based attribute entries", () => {
+  const diagnostics = [];
+  const config = normalizeConfig(
+    {
+      tags: {
+        "p-table": {
+          attributeOrder: [{ pattern: "(" }]
+        }
+      }
+    },
+    diagnostics
+  );
+
+  assert.deepEqual(config.tags["p-table"].attributeOrder, []);
+  assert.match(diagnostics[0], /Ignoring invalid attributeOrder regex entry on "p-table"/);
+});
+
 test("findConfigFile prefers the nearest config between document folder and workspace root", (t) => {
   const workspaceRoot = createTempWorkspace(t);
   const appRoot = path.join(workspaceRoot, "apps", "admin");
