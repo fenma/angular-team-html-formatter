@@ -1,6 +1,7 @@
-# Angular Team HTML Formatter
+# Angular HTML Formatter – VS Code Extension
 
-Line-preserving VS Code formatter for Angular HTML templates and standard HTML.
+HTML formatter for Angular templates and standard HTML in Visual Studio Code.  
+Preserves line breaks and formatting for Angular team workflows.
 
 This extension is designed for teams that want predictable indentation everywhere, while only applying stronger formatting rules to tags that are explicitly configured in the repository. It is especially useful for Angular component templates with custom elements such as PrimeNG components like `p-select`, but it remains safe for ordinary HTML because unknown tags get `indent-only` behavior by default.
 

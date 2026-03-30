@@ -1,8 +1,8 @@
 {
   "name": "angular-team-html-formatter",
-  "displayName": "Angular Team HTML Formatter",
-  "description": "Line-preserving HTML formatter for Angular templates with project-based tag rules.",
-  "version": "0.5.0",
+  "displayName": "Angular HTML Formatter - Format HTML Templates",
+  "description": "HTML formatter for Angular templates and standard HTML with line-preserving formatting.",
+  "version": "0.5.1",
   "publisher": "Fenma",
   "repository": {
     "type": "git",
@@ -85,12 +85,15 @@
     "@vscode/vsce": "^3.0.0"
   },
   "keywords": [
-    "angular",
-    "angular-html",
-    "angular-template",
+    "html formatter",
+    "angular html formatter",
     "html",
     "formatter",
-    "primeng",
-    "vscode-extension"
+    "angular",
+    "angular html",
+    "angular template formatter",
+    "vscode html formatter",
+    "format html",
+    "format angular template"
   ]
 }
