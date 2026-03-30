@@ -4,6 +4,7 @@ const fs = require("fs");
 const path = require("path");
 const { DEFAULT_CONFIG } = require("./default-config");
 const { isVoidTag } = require("../html/void-tags");
+const { getTagSettingConstraint } = require("../html/tag-setting-constraints");
 
 /**
  * Preferred config file name.
@@ -307,8 +308,9 @@ function normalizeTagRule(rule, tagName, diagnostics, baseRule) {
   }
 
   if (["preserve", "self-closing", "explicit"].includes(rule.closingStyle)) {
-    if (voidTag) {
-      diagnostics.push(`Ignoring closingStyle on void tag "${tagName}". Void tags cannot use closingStyle.`);
+    const closingStyleConstraint = getTagSettingConstraint(tagName, "closingStyle", rule.closingStyle);
+    if (closingStyleConstraint) {
+      diagnostics.push(closingStyleConstraint.normalizeMessage);
     } else {
       normalized.closingStyle = rule.closingStyle;
     }
@@ -321,6 +323,10 @@ function normalizeTagRule(rule, tagName, diagnostics, baseRule) {
   if (["preserve", "same-line", "next-line"].includes(rule.closingTagPosition)) {
     if (voidTag) {
       diagnostics.push(`Ignoring closingTagPosition on void tag "${tagName}". Void tags do not have end tags.`);
+    } else if (normalized.closingStyle === "self-closing" || rule.closingStyle === "self-closing") {
+      diagnostics.push(
+        `Ignoring closingTagPosition on tag "${tagName}" because closingStyle "self-closing" does not use an end tag.`
+      );
     } else {
       normalized.closingTagPosition = rule.closingTagPosition;
     }

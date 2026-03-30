@@ -109,7 +109,81 @@ test("normalizeConfig ignores closing settings that do not apply to void tags", 
   assert.equal(config.tags.input.closingBracketPosition, "next-line");
   assert.equal(config.tags.input.closingTagPosition, undefined);
   assert.deepEqual(diagnostics, [
-    'Ignoring closingStyle on void tag "input". Void tags cannot use closingStyle.',
+    'Ignoring closingStyle on tag "input". Standard HTML tags cannot use closingStyle.',
     'Ignoring closingTagPosition on void tag "input". Void tags do not have end tags.'
+  ]);
+});
+
+test("normalizeConfig ignores closingStyle on non-void standard HTML tags", () => {
+  const diagnostics = [];
+  const config = normalizeConfig(
+    {
+      tags: {
+        div: {
+          closingStyle: "explicit"
+        }
+      }
+    },
+    diagnostics
+  );
+
+  assert.equal(config.tags.div.closingStyle, undefined);
+  assert.deepEqual(diagnostics, [
+    'Ignoring closingStyle on tag "div". Standard HTML tags cannot use closingStyle.'
+  ]);
+});
+
+test("normalizeConfig still allows self-closing on custom component tags", () => {
+  const diagnostics = [];
+  const config = normalizeConfig(
+    {
+      tags: {
+        "p-select": {
+          closingStyle: "self-closing"
+        }
+      }
+    },
+    diagnostics
+  );
+
+  assert.equal(config.tags["p-select"].closingStyle, "self-closing");
+  assert.deepEqual(diagnostics, []);
+});
+
+test("normalizeConfig still allows explicit closingStyle on custom component tags", () => {
+  const diagnostics = [];
+  const config = normalizeConfig(
+    {
+      tags: {
+        "p-select": {
+          closingStyle: "explicit"
+        }
+      }
+    },
+    diagnostics
+  );
+
+  assert.equal(config.tags["p-select"].closingStyle, "explicit");
+  assert.deepEqual(diagnostics, []);
+});
+
+test("normalizeConfig ignores closingTagPosition when closingStyle is self-closing", () => {
+  const diagnostics = [];
+  const config = normalizeConfig(
+    {
+      tags: {
+        "p-select": {
+          closingStyle: "self-closing",
+          closingTagPosition: "next-line"
+        }
+      }
+    },
+    diagnostics
+  );
+
+  assert.equal(config.tags["p-select"].closingStyle, "self-closing");
+  assert.equal(config.tags["p-select"].closingTagPosition, undefined);
+  assert.deepEqual(diagnostics, [
+    'Ignoring closingTagPosition on tag "p-select" because closingStyle "self-closing" does not use an end tag.'
   ]);
 });

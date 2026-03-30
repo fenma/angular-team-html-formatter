@@ -242,7 +242,8 @@ Behavior:
 - attributes not listed here are treated as unknown attributes
 - unknown attributes are placed according to `unknownAttributesPosition`
 - the formatter preserves the original attribute text and value
-- void tags such as `input`, `img` and `br` ignore closing-only options like `closingStyle` and `closingTagPosition`
+- standard HTML tags ignore `closingStyle`; only custom/component tags can use it
+- void tags such as `input`, `img` and `br` also ignore `closingTagPosition`
 
 Important Angular behavior:
 
@@ -387,6 +388,8 @@ Behavior notes:
 
 - `self-closing` only collapses a tag if the element is empty or contains whitespace only
 - if the tag contains content, the formatter stays safe and keeps explicit closing
+- standard HTML tags cannot use `closingStyle`; custom/component tags can still use `"self-closing"` or `"explicit"`
+- `closingTagPosition` cannot be used together with `closingStyle: "self-closing"` because there is no explicit end tag to place
 
 Examples:
 

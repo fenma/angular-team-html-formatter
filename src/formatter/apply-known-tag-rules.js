@@ -119,7 +119,7 @@ function buildTagReplacement(text, tokens, tokenIndex, rule, logger) {
         replacement: {
           start: token.start,
           end: endToken.end,
-          text: multilineExplicit ? explicitTagText : `${serializedStartTag}${between}</${token.tagName}>`
+          text: explicitTagText
         },
         consumedTokenIndexes: [tokenIndex, token.pairIndex]
       };

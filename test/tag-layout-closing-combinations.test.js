@@ -522,3 +522,76 @@ test("full block with p-inputnumber keeps a single explicit closing tag on the n
     "<div class=\"field basis-1/2 required\">\n  <label for=\"packageWeight\">\n    Weight (<a [routerLink]=\"\" (click)=\"toggleWeightUnit()\">{{showAsKg ? 'kg' : 'lbs'}}</a>)\n  </label>\n  <p-inputnumber\n    inputId=\"packageWeight\"\n    mode=\"decimal\"\n    [locale]=\"currentLocale()\"\n    [maxFractionDigits]=\"2\"\n    [min]=\"0\"\n    formControlName=\"packageWeight\">\n  </p-inputnumber>\n  <app-validation-text controlName=\"packageWeight\" label=\"Weight\"></app-validation-text>\n</div>"
   );
 });
+
+test("closingTagPosition same-line normalizes empty explicit buttons onto one line", () => {
+  const input =
+    "<button class=\"p-button-outlined\" pButton type=\"button\" label=\"Overview\" [routerLink]=\"[baseLink, 'list']\"></button>\n<button class=\"p-button-primary\" pButton type=\"submit\" label=\"Save\">\n</button>\n<button #topbarmenubutton class=\"p-link layout-topbar-menu-button layout-topbar-button\" (click)=\"layoutService.showProfileSidebar()\"></button>";
+  const config = createConfig({
+    tags: {
+      button: {
+        attributeLayout: "single-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line",
+        closingTagPosition: "same-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<button class=\"p-button-outlined\" pButton type=\"button\" label=\"Overview\" [routerLink]=\"[baseLink, 'list']\"></button>\n<button class=\"p-button-primary\" pButton type=\"submit\" label=\"Save\"></button>\n<button #topbarmenubutton class=\"p-link layout-topbar-menu-button layout-topbar-button\" (click)=\"layoutService.showProfileSidebar()\"></button>"
+  );
+});
+
+test("closingTagPosition next-line normalizes empty explicit buttons onto the next line", () => {
+  const input =
+    "<button class=\"p-button-outlined\" pButton type=\"button\" label=\"Overview\" [routerLink]=\"[baseLink, 'list']\"></button>\n<button class=\"p-button-primary\" pButton type=\"submit\" label=\"Save\">\n</button>\n<button #topbarmenubutton class=\"p-link layout-topbar-menu-button layout-topbar-button\" (click)=\"layoutService.showProfileSidebar()\"></button>";
+  const config = createConfig({
+    tags: {
+      button: {
+        attributeLayout: "single-line",
+        closingStyle: "explicit",
+        closingBracketPosition: "same-line",
+        closingTagPosition: "next-line"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<button class=\"p-button-outlined\" pButton type=\"button\" label=\"Overview\" [routerLink]=\"[baseLink, 'list']\">\n</button>\n<button class=\"p-button-primary\" pButton type=\"submit\" label=\"Save\">\n</button>\n<button #topbarmenubutton class=\"p-link layout-topbar-menu-button layout-topbar-button\" (click)=\"layoutService.showProfileSidebar()\">\n</button>"
+  );
+});
+
+test("non-void standard HTML tags ignore disallowed self-closing closingStyle", () => {
+  const input = "<div class=\"panel\"></div>";
+  const config = createConfig({
+    tags: {
+      div: {
+        attributeLayout: "single-line",
+        closingStyle: "self-closing"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<div class=\"panel\"></div>");
+});
+
+test("custom component tags can still use self-closing closingStyle", () => {
+  const input = "<p-select class=\"w-full\"></p-select>";
+  const config = createConfig({
+    tags: {
+      "p-select": {
+        attributeOrder: ["class"],
+        attributeLayout: "single-line",
+        closingStyle: "self-closing"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<p-select class=\"w-full\" />");
+});

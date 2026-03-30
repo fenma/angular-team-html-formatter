@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.5.0
+
+- Added tag-setting constraints so standard HTML tags cannot use `closingStyle`, while custom/component tags still can
+- Added validation so `closingTagPosition` is rejected whenever `closingStyle` is `"self-closing"`
+
 ## 0.4.0
 
 - Added `firstLineAttributes` so selected attributes can stay on the tag line before the remaining attributes follow the configured `attributeLayout`

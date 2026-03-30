@@ -1,6 +1,7 @@
 "use strict";
 
 const { isVoidTag } = require("../html/void-tags");
+const { getTagSettingConstraint } = require("../html/tag-setting-constraints");
 
 /**
  * @typedef {{message: string, severity: "error" | "warning", start: number, end: number}} ConfigDiagnostic
@@ -33,14 +34,14 @@ function collectConfigDiagnostics(text) {
     ];
   }
 
-  return collectVoidTagSettingDiagnostics(root);
+  return collectTagSettingDiagnostics(root);
 }
 
 /**
  * @param {any} root
  * @returns {ConfigDiagnostic[]}
  */
-function collectVoidTagSettingDiagnostics(root) {
+function collectTagSettingDiagnostics(root) {
   if (!root || root.type !== "object") {
     return [];
   }
@@ -54,24 +55,41 @@ function collectVoidTagSettingDiagnostics(root) {
 
   for (const tagProperty of tagsProperty.value.properties) {
     const tagName = tagProperty.key.value;
-    if (!isVoidTag(String(tagName).toLowerCase()) || !tagProperty.value || tagProperty.value.type !== "object") {
+    if (!tagProperty.value || tagProperty.value.type !== "object") {
       continue;
     }
 
+    const voidTag = isVoidTag(String(tagName).toLowerCase());
     const closingStyleProperty = getObjectProperty(tagProperty.value, "closingStyle");
     if (closingStyleProperty) {
-      diagnostics.push({
-        message: `Void tag "${tagName}" cannot use "closingStyle".`,
-        severity: "error",
-        start: closingStyleProperty.key.start,
-        end: closingStyleProperty.value.end
-      });
+      const constraint = getTagSettingConstraint(tagName, "closingStyle", closingStyleProperty.value.value);
+      if (constraint) {
+        diagnostics.push({
+          message: constraint.diagnosticMessage,
+          severity: "error",
+          start: closingStyleProperty.key.start,
+          end: closingStyleProperty.value.end
+        });
+      }
+    }
+
+    if (voidTag) {
+      const closingTagPositionProperty = getObjectProperty(tagProperty.value, "closingTagPosition");
+      if (closingTagPositionProperty) {
+        diagnostics.push({
+          message: `Void tag "${tagName}" cannot use "closingTagPosition".`,
+          severity: "error",
+          start: closingTagPositionProperty.key.start,
+          end: closingTagPositionProperty.value.end
+        });
+      }
+      continue;
     }
 
     const closingTagPositionProperty = getObjectProperty(tagProperty.value, "closingTagPosition");
-    if (closingTagPositionProperty) {
+    if (closingTagPositionProperty && closingStyleProperty && closingStyleProperty.value.value === "self-closing") {
       diagnostics.push({
-        message: `Void tag "${tagName}" cannot use "closingTagPosition".`,
+        message: `Tag "${tagName}" cannot use "closingTagPosition" when "closingStyle" is "self-closing".`,
         severity: "error",
         start: closingTagPositionProperty.key.start,
         end: closingTagPositionProperty.value.end
