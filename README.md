@@ -30,6 +30,7 @@ This keeps unknown tags indentation-only and makes configured component formatti
 - indentation-only behavior for unknown tags
 - configurable tag-specific formatting for known tags
 - Angular-friendly attribute matching
+- Angular interpolation spacing normalization for `{{ value }}` and pipes such as `{{ value | currency }}`
 - no reflow or automatic line wrapping
 
 ## Behavior Rules
@@ -583,6 +584,17 @@ Supported kinds:
 - `two-way`
 - `structural`
 - `template-ref`
+
+## Angular Interpolations
+
+Text-node interpolations are normalized for readability.
+
+- `{{value}}` becomes `{{ value }}`
+- `{{  value  }}` becomes `{{ value }}`
+- `{{ value|currency }}` becomes `{{ value | currency }}`
+- `{{ value|date:'short' }}` becomes `{{ value | date:'short' }}`
+
+Pipe spacing is normalized around top-level `|` operators.
 
 ## PrimeNG `p-select` Example
 

@@ -7,7 +7,9 @@ const {
   extractSignificantContent,
   formatText,
   hasMeaningfulContentChange,
-  hasTextWhitespaceChange
+  hasTextWhitespaceChange,
+  normalizeAngularExpression,
+  normalizeInterpolationWhitespaceInText
 } = require("../src/formatter");
 const { DEFAULT_CONFIG } = require("../src/config/default-config");
 const { normalizeConfig } = require("../src/config/config-reader");
@@ -97,6 +99,23 @@ test("hasMeaningfulContentChange detects deleted text content", () => {
   );
 });
 
+test("normalizeInterpolationWhitespaceInText adds one space inside interpolation braces", () => {
+  assert.equal(normalizeInterpolationWhitespaceInText("{{value}}"), "{{ value }}");
+  assert.equal(normalizeInterpolationWhitespaceInText("{{  value  }}"), "{{ value }}");
+});
+
+test("normalizeAngularExpression adds spaces around top-level pipes", () => {
+  assert.equal(normalizeAngularExpression("value|currency"), "value | currency");
+  assert.equal(normalizeAngularExpression("value  |date:'short'"), "value | date:'short'");
+});
+
+test("normalizeAngularExpression preserves pipes inside string literals", () => {
+  assert.equal(
+    normalizeAngularExpression("value | myPipe:'a|b'"),
+    "value | myPipe:'a|b'"
+  );
+});
+
 test("extractMeaningfulTextNodes keeps raw whitespace for text nodes with content", () => {
   const input = "<div>\n  Hello\n    world\n</div>";
   assert.deepEqual(extractMeaningfulTextNodes(input), ["\n  Hello\n    world\n"]);
@@ -118,6 +137,18 @@ test("strict textWhitespace safety falls back to the original text", () => {
   const input = "<div>\n  Hello\n    world\n</div>";
   const output = formatText(input, DEFAULT_CONFIG, createLogger());
   assert.equal(output, input);
+});
+
+test("formatter normalizes interpolation spacing in text nodes", () => {
+  const input = "<div>{{value}}</div>\n<p>{{  value  }}</p>";
+  const output = formatText(input, DEFAULT_CONFIG, createLogger());
+  assert.equal(output, "<div>{{ value }}</div>\n<p>{{ value }}</p>");
+});
+
+test("formatter normalizes pipe spacing in text-node interpolations", () => {
+  const input = "<div>{{ value|currency }}</div>\n<p>{{ value  |date:'short' }}</p>";
+  const output = formatText(input, DEFAULT_CONFIG, createLogger());
+  assert.equal(output, "<div>{{ value | currency }}</div>\n<p>{{ value | date:'short' }}</p>");
 });
 
 test("normalized textWhitespace allows indentation changes around text nodes", () => {

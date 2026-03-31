@@ -1,8 +1,12 @@
 # Changelog
 
+## 0.6.5
+
+- Added Angular interpolation spacing normalization in text nodes so `{{value}}` becomes `{{ value }}` and pipes such as `{{ value|currency }}` become `{{ value | currency }}`
+- Added top-level `contentSafety.textWhitespace` with `"strict"`, `"normalized"`, and `"off"` modes so teams can control whether text-node whitespace changes are allowed
+
 ## 0.6.0
 
-- Added top-level `contentSafety.textWhitespace` with `"strict"`, `"normalized"`, and `"off"` modes so teams can control whether text-node whitespace changes are allowed
 - Added regex support for `firstLineAttributes` and `attributeOrder`, including validation, schema support, and examples in the README
 
 ## 0.5.0

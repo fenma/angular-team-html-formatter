@@ -519,7 +519,7 @@ test("full block with p-inputnumber keeps a single explicit closing tag on the n
   const output = formatText(input, config, createLogger());
   assert.equal(
     output,
-    "<div class=\"field basis-1/2 required\">\n  <label for=\"packageWeight\">\n    Weight (<a [routerLink]=\"\" (click)=\"toggleWeightUnit()\">{{showAsKg ? 'kg' : 'lbs'}}</a>)\n  </label>\n  <p-inputnumber\n    inputId=\"packageWeight\"\n    mode=\"decimal\"\n    [locale]=\"currentLocale()\"\n    [maxFractionDigits]=\"2\"\n    [min]=\"0\"\n    formControlName=\"packageWeight\">\n  </p-inputnumber>\n  <app-validation-text controlName=\"packageWeight\" label=\"Weight\"></app-validation-text>\n</div>"
+    "<div class=\"field basis-1/2 required\">\n  <label for=\"packageWeight\">\n    Weight (<a [routerLink]=\"\" (click)=\"toggleWeightUnit()\">{{ showAsKg ? 'kg' : 'lbs' }}</a>)\n  </label>\n  <p-inputnumber\n    inputId=\"packageWeight\"\n    mode=\"decimal\"\n    [locale]=\"currentLocale()\"\n    [maxFractionDigits]=\"2\"\n    [min]=\"0\"\n    formControlName=\"packageWeight\">\n  </p-inputnumber>\n  <app-validation-text controlName=\"packageWeight\" label=\"Weight\"></app-validation-text>\n</div>"
   );
 });
 

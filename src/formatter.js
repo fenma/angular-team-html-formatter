@@ -23,6 +23,7 @@ function formatText(text, config, logger, options = {}) {
   try {
     const initialTokens = tokenizeHtml(text);
     workingText = applyKnownTagRules(text, initialTokens, config, logger);
+    workingText = normalizeTextNodeInterpolations(workingText);
   } catch (error) {
     logger.warn(`Tag formatting failed, continuing with indentation only: ${error.message}`);
   }
@@ -92,7 +93,7 @@ function extractSignificantContent(text) {
     if (gap.trim().length > 0) {
       content.push({
         kind: "text",
-        value: gap.trim()
+        value: normalizeInterpolationWhitespaceInText(gap).trim()
       });
     }
 
@@ -110,7 +111,7 @@ function extractSignificantContent(text) {
   if (tail.trim().length > 0) {
     content.push({
       kind: "text",
-      value: tail.trim()
+      value: normalizeInterpolationWhitespaceInText(tail).trim()
     });
   }
 
@@ -123,8 +124,8 @@ function extractSignificantContent(text) {
  * @returns {boolean}
  */
 function hasTextWhitespaceChange(originalText, formattedText) {
-  const originalTextNodes = extractMeaningfulTextNodes(originalText);
-  const formattedTextNodes = extractMeaningfulTextNodes(formattedText);
+  const originalTextNodes = extractMeaningfulTextNodes(originalText).map(normalizeInterpolationWhitespaceInText);
+  const formattedTextNodes = extractMeaningfulTextNodes(formattedText).map(normalizeInterpolationWhitespaceInText);
 
   if (originalTextNodes.length !== formattedTextNodes.length) {
     return true;
@@ -206,6 +207,178 @@ function isAngularControlFlowGap(gap) {
   });
 }
 
+/**
+ * Normalizes Angular interpolation formatting in text nodes without touching tag
+ * syntax, attribute values, comments, or declarations.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function normalizeTextNodeInterpolations(text) {
+  const tokens = tokenizeHtml(text);
+  let output = "";
+  let cursor = 0;
+
+  for (const token of tokens) {
+    output += normalizeInterpolationWhitespaceInText(text.slice(cursor, token.start));
+    output += token.raw;
+    cursor = token.end;
+  }
+
+  output += normalizeInterpolationWhitespaceInText(text.slice(cursor));
+  return output;
+}
+
+/**
+ * Applies lightweight Angular interpolation formatting:
+ * - exactly one space inside `{{` and `}}`
+ * - exactly one space around top-level pipe operators
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function normalizeInterpolationWhitespaceInText(text) {
+  return text.replace(/{{([\s\S]*?)}}/g, (_match, expression) => `{{ ${normalizeAngularExpression(expression)} }}`);
+}
+
+/**
+ * @param {string} expression
+ * @returns {string}
+ */
+function normalizeAngularExpression(expression) {
+  const compact = collapseWhitespace(expression).trim();
+  return normalizePipeWhitespace(compact);
+}
+
+/**
+ * @param {string} value
+ * @returns {string}
+ */
+function collapseWhitespace(value) {
+  let output = "";
+  let quote = null;
+
+  for (let index = 0; index < value.length; index += 1) {
+    const char = value[index];
+
+    if (quote) {
+      output += char;
+      if (char === quote && value[index - 1] !== "\\") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (char === "\"" || char === "'") {
+      quote = char;
+      output += char;
+      continue;
+    }
+
+    if (/\s/.test(char)) {
+      if (!output.endsWith(" ")) {
+        output += " ";
+      }
+      continue;
+    }
+
+    output += char;
+  }
+
+  return output;
+}
+
+/**
+ * Adds single spaces around top-level Angular pipes while leaving logical OR,
+ * quoted strings, and nested groups untouched.
+ *
+ * @param {string} expression
+ * @returns {string}
+ */
+function normalizePipeWhitespace(expression) {
+  let output = "";
+  let quote = null;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+
+  for (let index = 0; index < expression.length; index += 1) {
+    const char = expression[index];
+    const next = expression[index + 1];
+    const prev = expression[index - 1];
+
+    if (quote) {
+      output += char;
+      if (char === quote && prev !== "\\") {
+        quote = null;
+      }
+      continue;
+    }
+
+    if (char === "\"" || char === "'") {
+      quote = char;
+      output += char;
+      continue;
+    }
+
+    if (char === "(") {
+      parenDepth += 1;
+      output += char;
+      continue;
+    }
+
+    if (char === ")" && parenDepth > 0) {
+      parenDepth -= 1;
+      output += char;
+      continue;
+    }
+
+    if (char === "[") {
+      bracketDepth += 1;
+      output += char;
+      continue;
+    }
+
+    if (char === "]" && bracketDepth > 0) {
+      bracketDepth -= 1;
+      output += char;
+      continue;
+    }
+
+    if (char === "{") {
+      braceDepth += 1;
+      output += char;
+      continue;
+    }
+
+    if (char === "}" && braceDepth > 0) {
+      braceDepth -= 1;
+      output += char;
+      continue;
+    }
+
+    if (
+      char === "|" &&
+      next !== "|" &&
+      prev !== "|" &&
+      parenDepth === 0 &&
+      bracketDepth === 0 &&
+      braceDepth === 0
+    ) {
+      output = output.trimEnd();
+      output += " | ";
+      while (/\s/.test(expression[index + 1] || "")) {
+        index += 1;
+      }
+      continue;
+    }
+
+    output += char;
+  }
+
+  return output.trim();
+}
+
 module.exports = {
   extractMeaningfulTextNodes,
   extractSignificantContent,
@@ -213,5 +386,8 @@ module.exports = {
   getIndentLevelAtEnd,
   hasMeaningfulContentChange,
   hasTextWhitespaceChange,
+  normalizeAngularExpression,
+  normalizeInterpolationWhitespaceInText,
+  normalizeTextNodeInterpolations,
   reindentHtml
 };
