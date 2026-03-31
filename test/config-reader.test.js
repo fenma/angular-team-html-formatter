@@ -26,6 +26,9 @@ test("parseJsonc supports inline comments after properties", () => {
       "size": 4,
       "useTabs": false
     },
+    "contentSafety": {
+      "textWhitespace": "normalized"
+    },
     "knownTagDefaults": {
       "attributeLayout": "single-line",
       "maxAttributeLineWidth": 80,
@@ -37,10 +40,29 @@ test("parseJsonc supports inline comments after properties", () => {
 
   const config = normalizeConfig(parsed, []);
   assert.equal(config.indent.size, 4);
+  assert.equal(config.contentSafety.textWhitespace, "normalized");
   assert.deepEqual(config.knownTagDefaults.firstLineAttributes, []);
   assert.equal(config.knownTagDefaults.attributeLayout, "single-line");
   assert.equal(config.knownTagDefaults.maxAttributeLineWidth, 80);
   assert.equal(config.knownTagDefaults.closingStyle, "explicit");
+});
+
+test("normalizeConfig defaults contentSafety.textWhitespace to strict", () => {
+  const config = normalizeConfig({}, []);
+  assert.equal(config.contentSafety.textWhitespace, "strict");
+});
+
+test("normalizeConfig ignores invalid contentSafety.textWhitespace values", () => {
+  const config = normalizeConfig(
+    {
+      contentSafety: {
+        textWhitespace: "anything-else"
+      }
+    },
+    []
+  );
+
+  assert.equal(config.contentSafety.textWhitespace, "strict");
 });
 
 test("normalizeConfig reads firstLineAttributes for known tag defaults and per-tag rules", () => {

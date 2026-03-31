@@ -18,6 +18,18 @@
       "type": "boolean",
       "description": "Legacy shorthand for indent.useTabs."
     },
+    "contentSafety": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "textWhitespace": {
+          "type": "string",
+          "enum": ["strict", "normalized", "off"],
+          "default": "strict",
+          "description": "Controls whether formatting may change whitespace inside text nodes."
+        }
+      }
+    },
     "defaultBehavior": {
       "type": "object",
       "additionalProperties": false,

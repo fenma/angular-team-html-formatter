@@ -2,7 +2,13 @@
 
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { formatText } = require("../src/formatter");
+const {
+  extractMeaningfulTextNodes,
+  extractSignificantContent,
+  formatText,
+  hasMeaningfulContentChange,
+  hasTextWhitespaceChange
+} = require("../src/formatter");
 const { DEFAULT_CONFIG } = require("../src/config/default-config");
 const { normalizeConfig } = require("../src/config/config-reader");
 const { createConfig, createLogger } = require("../test-support/helpers");
@@ -71,5 +77,76 @@ test("multiline non-self-closing tag keeps parent closing tag aligned", () => {
   assert.equal(
     output,
     "<div>\n  <input pInputText id=\"name\" type=\"text\" maxlength=\"100\"\n    formControlName=\"name\" required [pAutoFocus]=\"true\" [autofocus]=\"true\">\n</div>"
+  );
+});
+
+test("extractSignificantContent keeps text nodes, comments, and declarations", () => {
+  const input = "<!doctype html>\n<div>Hello {{ name }}</div>\n<!-- keep me -->\n<span>World</span>";
+  assert.deepEqual(extractSignificantContent(input), [
+    { kind: "declaration", value: "<!doctype html>" },
+    { kind: "text", value: "Hello {{ name }}" },
+    { kind: "comment", value: "<!-- keep me -->" },
+    { kind: "text", value: "World" }
+  ]);
+});
+
+test("hasMeaningfulContentChange detects deleted text content", () => {
+  assert.equal(
+    hasMeaningfulContentChange("<div>Hello {{ name }}</div>", "<div>Hello</div>"),
+    true
+  );
+});
+
+test("extractMeaningfulTextNodes keeps raw whitespace for text nodes with content", () => {
+  const input = "<div>\n  Hello\n    world\n</div>";
+  assert.deepEqual(extractMeaningfulTextNodes(input), ["\n  Hello\n    world\n"]);
+});
+
+test("extractMeaningfulTextNodes ignores Angular control-flow syntax", () => {
+  const input = "@if (ready) {\n<div>Hello</div>\n} @else {\n<div>Fallback</div>\n}";
+  assert.deepEqual(extractMeaningfulTextNodes(input), ["Hello", "Fallback"]);
+});
+
+test("hasTextWhitespaceChange detects whitespace changes inside text nodes", () => {
+  assert.equal(
+    hasTextWhitespaceChange("<div>\n  Hello\n    world\n</div>", "<div>\n  Hello\n  world\n</div>"),
+    true
+  );
+});
+
+test("strict textWhitespace safety falls back to the original text", () => {
+  const input = "<div>\n  Hello\n    world\n</div>";
+  const output = formatText(input, DEFAULT_CONFIG, createLogger());
+  assert.equal(output, input);
+});
+
+test("normalized textWhitespace allows indentation changes around text nodes", () => {
+  const input = "<section>\n<div>\n  Hello\n    world\n</div>\n</section>";
+  const config = createConfig({
+    contentSafety: {
+      textWhitespace: "normalized"
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(output, "<section>\n  <div>\n    Hello\n    world\n  </div>\n</section>");
+});
+
+test("formatting preserves significant text content while reordering attributes", () => {
+  const input =
+    "<p-select [options]=\"items\" class=\"w-full\" inputId=\"account\">Selected: {{ selectedLabel }}</p-select>";
+  const config = createConfig({
+    tags: {
+      "p-select": {
+        attributeOrder: ["inputId", "class", "options"],
+        closingStyle: "explicit"
+      }
+    }
+  });
+
+  const output = formatText(input, config, createLogger());
+  assert.equal(
+    output,
+    "<p-select inputId=\"account\" class=\"w-full\" [options]=\"items\">Selected: {{ selectedLabel }}</p-select>"
   );
 });

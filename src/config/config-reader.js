@@ -236,6 +236,17 @@ function normalizeConfig(parsed, diagnostics) {
     };
   }
 
+  if (parsed.contentSafety && typeof parsed.contentSafety === "object") {
+    config.contentSafety = {
+      textWhitespace:
+        parsed.contentSafety.textWhitespace === "strict" ||
+        parsed.contentSafety.textWhitespace === "normalized" ||
+        parsed.contentSafety.textWhitespace === "off"
+          ? parsed.contentSafety.textWhitespace
+          : DEFAULT_CONFIG.contentSafety.textWhitespace
+    };
+  }
+
   if (parsed.defaultBehavior && typeof parsed.defaultBehavior === "object") {
     config.defaultBehavior = {
       unknownTags:

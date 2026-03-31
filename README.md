@@ -62,6 +62,9 @@ Create `html-formatter.config.jsonc` in your project root:
     "size": 2,
     "useTabs": false
   },
+  "contentSafety": {
+    "textWhitespace": "strict"             // strict | normalized | off
+  },
   "defaultBehavior": {
     "unknownTags": "indent-only" // indent-only
   },
@@ -123,6 +126,28 @@ Defines the fallback behavior for tags that are not explicitly listed in `tags`.
   }
 }
 ```
+
+#### `contentSafety`
+
+Controls extra safety checks that protect user content while formatting.
+
+```json
+{
+  "contentSafety": {
+    "textWhitespace": "strict"
+  }
+}
+```
+
+Supported `textWhitespace` values:
+
+- `"strict"`: if formatting would change whitespace inside text nodes, the original text is returned
+- `"normalized"`: text-node whitespace may change as a side effect of indentation
+- `"off"`: disables the text-whitespace safety check
+
+Recommended:
+
+- use `"strict"` if trust and content preservation are more important than aggressive indentation cleanup
 
 #### `knownTagDefaults`
 

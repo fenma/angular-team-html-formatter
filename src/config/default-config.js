@@ -11,6 +11,9 @@ const DEFAULT_CONFIG = {
     size: 2,
     useTabs: false
   },
+  contentSafety: {
+    textWhitespace: "strict"
+  },
   defaultBehavior: {
     unknownTags: "indent-only"
   },
