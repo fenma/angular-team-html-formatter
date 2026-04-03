@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.6
+
+- Fixed content-safety fallback so Angular control-flow syntax such as `@if` and `@else` no longer counts as user-facing text content
+- Improved `"strict"` text-whitespace safety so normal HTML collapsed whitespace can still be reformatted, while whitespace-preserving contexts such as `<pre>` and `<textarea>` remain protected
+
 ## 0.6.5
 
 - Added Angular interpolation spacing normalization in text nodes so `{{value}}` becomes `{{ value }}` and pipes such as `{{ value|currency }}` become `{{ value | currency }}`

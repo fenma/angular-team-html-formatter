@@ -90,7 +90,7 @@ function extractSignificantContent(text) {
 
   for (const token of tokens) {
     const gap = text.slice(cursor, token.start);
-    if (gap.trim().length > 0) {
+    if (shouldTrackSignificantTextContent(gap)) {
       content.push({
         kind: "text",
         value: normalizeInterpolationWhitespaceInText(gap).trim()
@@ -108,7 +108,7 @@ function extractSignificantContent(text) {
   }
 
   const tail = text.slice(cursor);
-  if (tail.trim().length > 0) {
+  if (shouldTrackSignificantTextContent(tail)) {
     content.push({
       kind: "text",
       value: normalizeInterpolationWhitespaceInText(tail).trim()
@@ -124,8 +124,8 @@ function extractSignificantContent(text) {
  * @returns {boolean}
  */
 function hasTextWhitespaceChange(originalText, formattedText) {
-  const originalTextNodes = extractMeaningfulTextNodes(originalText).map(normalizeInterpolationWhitespaceInText);
-  const formattedTextNodes = extractMeaningfulTextNodes(formattedText).map(normalizeInterpolationWhitespaceInText);
+  const originalTextNodes = extractMeaningfulTextNodes(originalText).map(serializeTextNodeWhitespaceSemantics);
+  const formattedTextNodes = extractMeaningfulTextNodes(formattedText).map(serializeTextNodeWhitespaceSemantics);
 
   if (originalTextNodes.length !== formattedTextNodes.length) {
     return true;
@@ -145,24 +145,33 @@ function hasTextWhitespaceChange(originalText, formattedText) {
  * Pure indentation-only gaps between tags are ignored.
  *
  * @param {string} text
- * @returns {string[]}
+ * @returns {{text: string, preserveWhitespace: boolean}[]}
  */
 function extractMeaningfulTextNodes(text) {
   const tokens = tokenizeHtml(text);
   const textNodes = [];
   let cursor = 0;
+  const openTagStack = [];
 
   for (const token of tokens) {
     const gap = text.slice(cursor, token.start);
     if (shouldProtectTextNodeWhitespace(gap)) {
-      textNodes.push(gap);
+      textNodes.push({
+        text: gap,
+        preserveWhitespace: isWhitespacePreservingContext(openTagStack)
+      });
     }
+
+    updateOpenTagStack(openTagStack, token);
     cursor = token.end;
   }
 
   const tail = text.slice(cursor);
   if (shouldProtectTextNodeWhitespace(tail)) {
-    textNodes.push(tail);
+    textNodes.push({
+      text: tail,
+      preserveWhitespace: isWhitespacePreservingContext(openTagStack)
+    });
   }
 
   return textNodes;
@@ -173,6 +182,21 @@ function extractMeaningfulTextNodes(text) {
  * @returns {boolean}
  */
 function shouldProtectTextNodeWhitespace(gap) {
+  if (gap.trim().length === 0) {
+    return false;
+  }
+
+  return !isAngularControlFlowGap(gap);
+}
+
+/**
+ * Significant-content protection should track only user-facing text content,
+ * not structural Angular block syntax that happens to live between HTML tags.
+ *
+ * @param {string} gap
+ * @returns {boolean}
+ */
+function shouldTrackSignificantTextContent(gap) {
   if (gap.trim().length === 0) {
     return false;
   }
@@ -205,6 +229,64 @@ function isAngularControlFlowGap(gap) {
 
     return startsWithAngularBlock(withoutLeadingBraces);
   });
+}
+
+/**
+ * @param {string[]} openTagStack
+ * @param {import("./parser/html-tokenizer").TagToken} token
+ * @returns {void}
+ */
+function updateOpenTagStack(openTagStack, token) {
+  if (token.kind === "start" && token.tagName && !token.selfClosing) {
+    openTagStack.push(token.tagName);
+    return;
+  }
+
+  if (token.kind !== "end" || !token.tagName) {
+    return;
+  }
+
+  for (let index = openTagStack.length - 1; index >= 0; index -= 1) {
+    if (openTagStack[index] === token.tagName) {
+      openTagStack.splice(index, 1);
+      return;
+    }
+  }
+}
+
+/**
+ * @param {string[]} openTagStack
+ * @returns {boolean}
+ */
+function isWhitespacePreservingContext(openTagStack) {
+  return openTagStack.some((tagName) => WHITESPACE_PRESERVING_TAGS.has(tagName));
+}
+
+/**
+ * @param {{text: string, preserveWhitespace: boolean}} textNode
+ * @returns {string}
+ */
+function serializeTextNodeWhitespaceSemantics(textNode) {
+  const normalizedText = normalizeInterpolationWhitespaceInText(textNode.text);
+  if (textNode.preserveWhitespace) {
+    return `preserve:${normalizedText}`;
+  }
+
+  return `collapse:${serializeCollapsedWhitespaceSemantics(normalizedText)}`;
+}
+
+/**
+ * In normal HTML text, browsers collapse whitespace. For safety checks we care
+ * about semantic whitespace, not indentation depth.
+ *
+ * @param {string} text
+ * @returns {string}
+ */
+function serializeCollapsedWhitespaceSemantics(text) {
+  const hasLeadingWhitespace = /^\s/.test(text);
+  const hasTrailingWhitespace = /\s$/.test(text);
+  const collapsedCore = text.replace(/\s+/g, " ").trim();
+  return `${hasLeadingWhitespace ? "lead" : "nolead"}|${collapsedCore}|${hasTrailingWhitespace ? "trail" : "notrail"}`;
 }
 
 /**
@@ -378,6 +460,8 @@ function normalizePipeWhitespace(expression) {
 
   return output.trim();
 }
+
+const WHITESPACE_PRESERVING_TAGS = new Set(["pre", "textarea"]);
 
 module.exports = {
   extractMeaningfulTextNodes,

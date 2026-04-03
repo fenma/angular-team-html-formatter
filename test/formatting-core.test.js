@@ -92,10 +92,25 @@ test("extractSignificantContent keeps text nodes, comments, and declarations", (
   ]);
 });
 
+test("extractSignificantContent ignores Angular control-flow syntax between tags", () => {
+  const input = "<div>\n@if (ready) {\n  <span>Hello</span>\n}\n</div>";
+  assert.deepEqual(extractSignificantContent(input), [{ kind: "text", value: "Hello" }]);
+});
+
 test("hasMeaningfulContentChange detects deleted text content", () => {
   assert.equal(
     hasMeaningfulContentChange("<div>Hello {{ name }}</div>", "<div>Hello</div>"),
     true
+  );
+});
+
+test("hasMeaningfulContentChange ignores Angular control-flow indentation-only changes", () => {
+  assert.equal(
+    hasMeaningfulContentChange(
+      "<div>\n@if (ready) {\n<span>Hello</span>\n}\n</div>",
+      "<div>\n  @if (ready) {\n    <span>Hello</span>\n  }\n</div>"
+    ),
+    false
   );
 });
 
@@ -118,25 +133,43 @@ test("normalizeAngularExpression preserves pipes inside string literals", () => 
 
 test("extractMeaningfulTextNodes keeps raw whitespace for text nodes with content", () => {
   const input = "<div>\n  Hello\n    world\n</div>";
-  assert.deepEqual(extractMeaningfulTextNodes(input), ["\n  Hello\n    world\n"]);
+  assert.deepEqual(extractMeaningfulTextNodes(input), [
+    { text: "\n  Hello\n    world\n", preserveWhitespace: false }
+  ]);
 });
 
 test("extractMeaningfulTextNodes ignores Angular control-flow syntax", () => {
   const input = "@if (ready) {\n<div>Hello</div>\n} @else {\n<div>Fallback</div>\n}";
-  assert.deepEqual(extractMeaningfulTextNodes(input), ["Hello", "Fallback"]);
+  assert.deepEqual(extractMeaningfulTextNodes(input), [
+    { text: "Hello", preserveWhitespace: false },
+    { text: "Fallback", preserveWhitespace: false }
+  ]);
+});
+
+test("extractMeaningfulTextNodes marks pre content as whitespace-preserving", () => {
+  const input = "<pre>\n  Hello\n    world\n</pre>";
+  assert.deepEqual(extractMeaningfulTextNodes(input), [
+    { text: "\n  Hello\n    world\n", preserveWhitespace: true }
+  ]);
 });
 
 test("hasTextWhitespaceChange detects whitespace changes inside text nodes", () => {
   assert.equal(
-    hasTextWhitespaceChange("<div>\n  Hello\n    world\n</div>", "<div>\n  Hello\n  world\n</div>"),
+    hasTextWhitespaceChange("<pre>\n  Hello\n    world\n</pre>", "<pre>\n  Hello\n  world\n</pre>"),
     true
   );
 });
 
-test("strict textWhitespace safety falls back to the original text", () => {
-  const input = "<div>\n  Hello\n    world\n</div>";
+test("strict textWhitespace safety falls back to the original text in preformatted content", () => {
+  const input = "<div>\n<pre>\n  Hello\n    world\n</pre>\n</div>";
   const output = formatText(input, DEFAULT_CONFIG, createLogger());
   assert.equal(output, input);
+});
+
+test("strict textWhitespace allows indentation-only changes in normal HTML text", () => {
+  const input = "<section>\n<div>\n  Hello\n    world\n</div>\n</section>";
+  const output = formatText(input, DEFAULT_CONFIG, createLogger());
+  assert.equal(output, "<section>\n  <div>\n    Hello\n    world\n  </div>\n</section>");
 });
 
 test("formatter normalizes interpolation spacing in text nodes", () => {
