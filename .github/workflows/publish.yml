@@ -62,6 +62,9 @@ jobs:
       - name: Publish to Visual Studio Marketplace
         run: npx @vscode/vsce publish -p "${{ secrets.VSCE_PAT }}"
 
+      - name: Publish to Open VSX
+        run: npx ovsx publish -p "${{ secrets.OPEN_VSX_TOKEN }}"
+
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
